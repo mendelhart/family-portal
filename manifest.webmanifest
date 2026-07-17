@@ -1,0 +1,14 @@
+{
+  "name": "Family Portal",
+  "short_name": "Family",
+  "description": "Family portal with a combined Yiddish (Hebrew) and English calendar, contacts, and reminders.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f6f7fb",
+  "theme_color": "#2f3a73",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
