@@ -140,6 +140,24 @@
   .tpl-swatch .sw-num{font-weight:700;font-size:16px}
   .tpl-swatch .sw-dot{position:absolute;right:8px;bottom:8px;width:9px;height:9px;border-radius:50%}
   .tpl-swatch .sw-name{display:block;padding:6px 9px;font-size:11px;font-weight:600;border-top:1px solid var(--line);color:var(--ink2)}
+  .tpl-swatch.sel{outline:3px solid var(--indigo);outline-offset:-1px}
+  /* designed calendar (used for print + image/PDF capture) */
+  .cal-print{font-family:var(--pcf,Georgia,serif);color:#1b2140;-webkit-print-color-adjust:exact;print-color-adjust:exact;background:#fff}
+  .cal-print .pc-band{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--pca);padding-bottom:6px;margin-bottom:8px}
+  .cal-print .pc-title{font-size:24px;font-weight:700;color:var(--pct);line-height:1}
+  .cal-print .pc-hebm{font-size:15px;color:var(--pca);margin-top:3px}
+  .cal-print .pc-sub{font-size:11px;color:#555;text-align:right;line-height:1.5}
+  .cal-print table.pcal{width:100%;border-collapse:collapse;table-layout:fixed}
+  .cal-print table.pcal th{background:var(--pch);color:var(--pcfg);padding:6px 4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--pcl)}
+  .cal-print table.pcal td{border:1px solid var(--pcl);height:0.92in;vertical-align:top;padding:3px 5px;overflow:hidden}
+  .cal-print table.pcal td.out{background:var(--pco);color:#b7b7b7}
+  .cal-print .pc-dnum{font-weight:700;font-size:15px;color:var(--pcn)}
+  .cal-print .pc-dheb{float:right;font-size:11px;color:var(--pca);font-family:'Frank Ruhl Libre',serif}
+  .cal-print .pc-hol{color:var(--pchl);font-weight:600;font-size:9px;display:block;margin-top:1px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cal-print .pc-ev{font-size:9px;display:block;margin-top:1px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cal-print .pc-ev .dotc{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:middle}
+  .cal-print .pc-ev img{width:12px;height:12px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px}
+  .cal-cap{position:fixed;left:-12000px;top:0;width:1400px;background:#fff;padding:0}
 
   table{width:100%;border-collapse:collapse}
   th,td{text-align:left;padding:10px 12px;font-size:13.5px;border-top:1px solid var(--line)}
@@ -213,23 +231,6 @@
     #printArea .heb{font-family:'Frank Ruhl Libre','Times New Roman',serif;direction:rtl;unicode-bidi:isolate}
     .pr-foot{margin-top:14px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;text-align:center}
     #printArea, #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .cal-print{font-family:var(--pcf);color:#1b2140}
-    .cal-print .pc-band{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--pca);padding-bottom:8px;margin-bottom:8px}
-    .cal-print .pc-title{font-size:26px;font-weight:700;color:var(--pct);line-height:1}
-    .cal-print .pc-hebm{font-size:15px;color:var(--pca);margin-top:3px}
-    .cal-print .pc-sub{font-size:11px;color:#555;text-align:right;line-height:1.5}
-    table.pcal{width:100%;border-collapse:collapse;table-layout:fixed}
-    table.pcal th{background:var(--pch);color:var(--pcfg);padding:6px 4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--pcl)}
-    table.pcal td{border:1px solid var(--pcl);height:0.95in;vertical-align:top;padding:3px 5px;overflow:hidden}
-    .cal-print .pc-band{margin-bottom:6px;padding-bottom:6px}
-    .cal-print .pc-title{font-size:22px}
-    table.pcal td.out{background:var(--pco);color:#b7b7b7}
-    .cal-print .pc-dnum{font-weight:700;font-size:15px;color:var(--pcn)}
-    .cal-print .pc-dheb{float:right;font-size:11px;color:var(--pca);font-family:'Frank Ruhl Libre',serif}
-    .cal-print .pc-hol{color:var(--pchl);font-weight:600;font-size:9px;display:block;margin-top:1px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .cal-print .pc-ev{font-size:9px;display:block;margin-top:1px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .cal-print .pc-ev .dotc{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:middle}
-    .cal-print .pc-ev img{width:12px;height:12px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px}
   }
   @media(max-width:560px){
     /* phones: show short event names, tap a day for full details */
@@ -309,12 +310,24 @@ const { HDate, gematriya, HebrewCalendar } = window.hebcal;
 const SUPABASE_URL      = '';   // e.g. 'https://abcd1234.supabase.co'
 const SUPABASE_ANON_KEY = '';   // the "anon public" key
 const VAPID_PUBLIC_KEY  = '';   // for app push notifications when closed (see SETUP.md → Reminders)
-const BACKEND = !!(SUPABASE_URL && SUPABASE_ANON_KEY);
+
+// ── Hosting SEVERAL main families from ONE deployment (no code duplication) ──
+// Give each main family its own free Supabase project, then map its domain here.
+// One codebase serves them all, so updates apply everywhere at once. You (the
+// master admin) manage every project; each main family has its own admin + users.
+const SITES = {
+  // 'cohenfamily.com':    { url:'https://AAA.supabase.co', key:'anon-public-key-AAA' },
+  // 'friedmanfamily.com': { url:'https://BBB.supabase.co', key:'anon-public-key-BBB' },
+};
+const _site = (typeof location !== 'undefined' && SITES[location.hostname]) || null;
+const _SB_URL = _site ? _site.url : SUPABASE_URL;
+const _SB_KEY = _site ? _site.key : SUPABASE_ANON_KEY;
+const BACKEND = !!(_SB_URL && _SB_KEY);
 
 let supa = null;
 if (BACKEND) {
   const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2');
-  supa = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  supa = createClient(_SB_URL, _SB_KEY);
 }
 
 /* ============================================================
@@ -372,7 +385,7 @@ const DemoStore = {
     const s=JSON.parse(JSON.stringify(SEED)); localStorage.setItem(LS_KEY, JSON.stringify(s)); return s;
   },
   persist(){ localStorage.setItem(LS_KEY, JSON.stringify(FULL)); },
-  async boot(){ FULL = this.loadLocal(); DB.meta.communityName = FULL.meta.communityName;
+  async boot(){ FULL = this.loadLocal(); DB.meta.communityName = FULL.meta.communityName; DB.meta.emailTemplates = FULL.meta.emailTemplates;
     DB.families = FULL.families;
     try{ const s=sessionStorage.getItem(SS_KEY); if(s){ const sess=JSON.parse(s);
       if(sess.isAdmin || FULL.families.some(f=>f.id===sess.familyId)){ SESSION=sess; return true; } } }catch(e){}
@@ -392,7 +405,7 @@ const DemoStore = {
   async deleteEvent(fid,eid){ this.persist(); },
   async createHousehold(f){ this.persist(); return f.id; },
   async deleteHousehold(fid){ this.persist(); },
-  async saveSettings(){ FULL.meta.communityName=DB.meta.communityName; this.persist(); },
+  async saveSettings(){ FULL.meta.communityName=DB.meta.communityName; FULL.meta.emailTemplates=DB.meta.emailTemplates; this.persist(); },
   async saveAuthMeta(fid){ this.persist(); },       // demo: username/pin live on the family
   async saveAdminCreds(u,p){ FULL.meta.adminUser=u; FULL.meta.adminPin=p; this.persist(); },
   exportAll(){ return FULL; },
@@ -427,15 +440,16 @@ const SupaStore = {
       supa.from('settings').select('*')
     ]);
     const fam = (hh||[]).map(h=>({ id:h.id, householdName:h.name,
-      contact:{ phone:h.phone||'', email:h.email||'', address:h.address||'' }, members:[], events:[] }));
+      contact:{ phone:h.phone||'', email:h.email||'', address:h.address||'' }, notify:h.notify||undefined, members:[], events:[] }));
     const byId = Object.fromEntries(fam.map(f=>[f.id,f]));
     (mm||[]).forEach(m=>{ const f=byId[m.household_id]; if(f) f.members.push(
-      { id:m.id, firstName:m.first_name, lastName:m.last_name, hebrewName:m.hebrew_name, relation:m.relation, birthday:m.birthday||'', phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' }); });
+      { id:m.id, firstName:m.first_name, lastName:m.last_name, hebrewName:m.hebrew_name, relation:m.relation, gender:m.gender||'', birthday:m.birthday||'', phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' }); });
     (ee||[]).forEach(e=>{ const f=byId[e.household_id]; if(f) f.events.push(
-      { id:e.id, type:e.type, title:e.title, gregDate:e.greg_date, recurrence:e.recurrence, frequency:e.frequency||'yearly', recurTitle:e.recur_title||'', notes:e.notes||'', photo:e.photo||'', remind:e.remind||undefined }); });
+      { id:e.id, type:e.type, title:e.title, gregDate:e.greg_date, recurrence:e.recurrence, frequency:e.frequency||'yearly', noYear:!!e.no_year, recurTitle:e.recur_title||'', notes:e.notes||'', photo:e.photo||'' }); });
     DB.families = fam;
     const cn = (st||[]).find(s=>s.key==='communityName');
     DB.meta.communityName = cn ? cn.value : 'Our Family Portal';
+    const et = (st||[]).find(s=>s.key==='emailTemplates'); if(et && et.value){ try{ DB.meta.emailTemplates=JSON.parse(et.value); }catch(e){} }
   },
   async login(email,pass){
     const { error } = await supa.auth.signInWithPassword({ email:(email||'').trim(), password:pass });
@@ -458,21 +472,21 @@ const SupaStore = {
   },
   async listHouseholdsPublic(){ const { data } = await supa.from('households').select('id,name').order('name'); return data||[]; },
   async saveHousehold(f){ const { error } = await supa.from('households').update(
-      { name:f.householdName, phone:f.contact.phone, email:f.contact.email, address:f.contact.address }).eq('id', f.id);
+      { name:f.householdName, phone:f.contact.phone, email:f.contact.email, address:f.contact.address, notify:f.notify||null }).eq('id', f.id);
     if(error) throw new Error(error.message); },
   async createHousehold(f){ const { data, error } = await supa.from('households').insert(
       { name:f.householdName, phone:f.contact?.phone||'', email:f.contact?.email||'', address:f.contact?.address||'' }).select().single();
     if(error) throw new Error(error.message); f.id=data.id; return data.id; },
   async deleteHousehold(fid){ const { error } = await supa.from('households').delete().eq('id', fid); if(error) throw new Error(error.message); },
   async saveMember(fid,m){ const row={ household_id:fid, first_name:m.firstName, last_name:m.lastName,
-      hebrew_name:m.hebrewName, relation:m.relation, birthday:m.birthday||null, phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' };
+      hebrew_name:m.hebrewName, relation:m.relation, gender:m.gender||'', birthday:m.birthday||null, phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' };
     const exists = await supa.from('members').select('id').eq('id', m.id).maybeSingle();
     let error;
     if(exists.data){ ({ error } = await supa.from('members').update(row).eq('id', m.id)); }
     else { ({ error } = await supa.from('members').insert({ id:m.id, ...row })); }
     if(error) throw new Error(error.message); },
   async deleteMember(fid,mid){ const { error } = await supa.from('members').delete().eq('id', mid); if(error) throw new Error(error.message); },
-  async saveEvent(fid,e){ const row={ household_id:fid, type:e.type, title:e.title, greg_date:e.gregDate, recurrence:e.recurrence, frequency:e.frequency||'yearly', recur_title:e.recurTitle||'', notes:e.notes, photo:e.photo||'', remind:e.remind||null };
+  async saveEvent(fid,e){ const row={ household_id:fid, type:e.type, title:e.title, greg_date:e.gregDate, recurrence:e.recurrence, frequency:e.frequency||'yearly', recur_title:e.recurTitle||'', no_year:!!e.noYear, notes:e.notes, photo:e.photo||'' };
     const exists = await supa.from('events').select('id').eq('id', e.id).maybeSingle();
     let error;
     if(exists.data){ ({ error } = await supa.from('events').update(row).eq('id', e.id)); }
@@ -480,7 +494,8 @@ const SupaStore = {
     if(error) throw new Error(error.message); },
   async deleteEvent(fid,eid){ const { error } = await supa.from('events').delete().eq('id', eid); if(error) throw new Error(error.message); },
   async saveSettings(){ const { error } = await supa.from('settings').upsert({ key:'communityName', value:DB.meta.communityName });
-    if(error) throw new Error(error.message); }
+    if(error) throw new Error(error.message);
+    if(DB.meta.emailTemplates){ const { error:e2 } = await supa.from('settings').upsert({ key:'emailTemplates', value:JSON.stringify(DB.meta.emailTemplates) }); if(e2) throw new Error(e2.message); } }
 };
 
 const Store = BACKEND ? SupaStore : DemoStore;
@@ -520,11 +535,28 @@ function occurrencesInRange(ev, start, end){
   }
   return out;
 }
+// the Hebrew (month,day) of `oh` re-expressed in Hebrew year `hy` (Adar/short-month aware)
+function hebrewDateInYear(oh, hy){ const om=oh.getMonth(), od=oh.getDate(), oy=oh.getFullYear(); let m=om;
+  if(om===12 && HDate.isLeapYear(hy) && !HDate.isLeapYear(oy)) m=13;
+  if(om===13 && !HDate.isLeapYear(hy)) m=12;
+  let dim; try{ dim=HDate.daysInMonth(m,hy); }catch(e){ return null; }
+  try{ return new HDate(Math.min(od,dim), m, hy); }catch(e){ return null; }
+}
 function familyEvents(fam){
   const evs=[];
-  (fam.members||[]).forEach(m=>{ if(m.birthday) evs.push({ id:m.id+'_bd', type:'birthday',
+  (fam.members||[]).forEach(m=>{ if(m.birthday){ evs.push({ id:m.id+'_bd', type:'birthday',
     title:(m.firstName+' '+(m.lastName||'')).trim(), gregDate:m.birthday, recurrence:'hebrew', notes:'',
-    hebrewName:m.hebrewName, photo:m.photo||'', familyId:fam.id, householdName:fam.householdName }); });
+    hebrewName:m.hebrewName, photo:m.photo||'', familyId:fam.id, householdName:fam.householdName });
+    // Auto Bar Mitzvah (boy, 13) / Bas Mitzvah (girl, 12) by the Hebrew birthday
+    if(m.gender==='m'||m.gender==='f'){ const age=m.gender==='m'?13:12;
+      const oh=hFromGreg(gregToDate(m.birthday)); const occ=hebrewDateInYear(oh, oh.getFullYear()+age);
+      if(occ){ const g=occ.greg();
+        evs.push({ id:m.id+'_bm', type:'milestone', frequency:'once', recurrence:'gregorian',
+          title:(m.firstName+' — '+(m.gender==='m'?'Bar Mitzvah':'Bas Mitzvah')),
+          gregDate: g.getFullYear()+'-'+String(g.getMonth()+1).padStart(2,'0')+'-'+String(g.getDate()).padStart(2,'0'),
+          notes:'', photo:m.photo||'', familyId:fam.id, householdName:fam.householdName }); }
+    }
+  } });
   (fam.events||[]).forEach(e=>evs.push({ ...e, familyId:fam.id, householdName:fam.householdName }));
   return evs;
 }
@@ -546,20 +578,21 @@ function holidaysInRange(start, end){
 function holidayBuckets(start,end){ const b={}; holidaysInRange(start,end).forEach(h=>{ const k=dateKey(h.date); (b[k]=b[k]||[]).push(h); }); return b; }
 
 /* ---- Reminder helpers ---- */
-function defaultRemind(){ return { on:false, daysBefore:7, channels:{ browser:true, push:true, email:false }, notify:'family', emails:'' }; }
-// returns events whose next occurrence falls within their reminder window (from today)
-function dueReminders(withinDays=60){
+// per-family notification preferences (set in My Household → Notifications)
+function familyNotify(f){ return Object.assign({ email:true, browser:true, push:true, daysBefore:7 }, (f&&f.notify)||{}); }
+// upcoming events for the browser popups, scoped to the user's own family (admins: all)
+function dueReminders(){
+  const fam = SESSION && SESSION.familyId ? findFam(SESSION.familyId) : null;
+  const pref = familyNotify(fam);
   const start=new Date(); start.setHours(0,0,0,0);
-  const end=new Date(start); end.setDate(end.getDate()+withinDays);
+  const end=new Date(start); end.setDate(end.getDate()+(pref.daysBefore||7));
+  const scope = (SESSION && SESSION.isAdmin) ? DB.families : (fam?[fam]:[]);
   const due=[];
-  allEvents().forEach(ev=>{
-    const r = ev.remind; if(!r || !r.on) return;
-    occurrencesInRange(ev, start, end).forEach(o=>{
-      const days=Math.round((new Date(o.date).setHours(0,0,0,0)-start)/86400000);
-      if(days<=(r.daysBefore||7)) due.push({ ...ev, occ:o.date, years:o.years, daysUntil:days });
-    });
-  });
-  return due.sort((a,b)=>a.occ-b.occ);
+  scope.forEach(f=>familyEvents(f).forEach(ev=>occurrencesInRange(ev,start,end).forEach(o=>{
+    const days=Math.round((new Date(o.date).setHours(0,0,0,0)-start)/86400000);
+    due.push({ ...ev, occ:o.date, years:o.years, daysUntil:days });
+  })));
+  return { pref, list:due.sort((a,b)=>a.occ-b.occ) };
 }
 const TYPE_LABEL={ yahrzeit:'Yahrzeit', birthday:'Birthday', anniversary:'Anniversary', milestone:'Milestone' };
 const TYPE_BADGE={ yahrzeit:'b-yahrzeit', birthday:'b-birthday', anniversary:'b-anniversary', milestone:'b-milestone' };
@@ -574,7 +607,13 @@ const CAL_TEMPLATES=[
  {id:7,name:'Rose Blush',head:'#a24d63',fg:'#ffffff',accent:'#b3596f',line:'#f0d7de',hol:'#b07d2a',out:'#fdf6f7',num:'#4a2530',font:'Baskerville, Georgia, serif',title:'#a24d63'},
  {id:8,name:'Navy & Cream',head:'#1c2b4a',fg:'#f3ead2',accent:'#1c2b4a',line:'#dfd7c2',hol:'#b08a2e',out:'#faf6ec',num:'#1c2b4a',font:'Georgia, serif',title:'#1c2b4a'},
  {id:9,name:'Teal Fresh',head:'#0f6e72',fg:'#ffffff',accent:'#0f8a90',line:'#cdeaea',hol:'#7a8a2f',out:'#f2fafa',num:'#08484a',font:'"Segoe UI", Arial, sans-serif',title:'#0f6e72'},
- {id:10,name:'Mono Bold',head:'#000000',fg:'#ffffff',accent:'#000000',line:'#bbbbbb',hol:'#555555',out:'#f2f2f2',num:'#000000',font:'"Arial Black", Arial, sans-serif',title:'#000000'}
+ {id:10,name:'Mono Bold',head:'#000000',fg:'#ffffff',accent:'#000000',line:'#bbbbbb',hol:'#555555',out:'#f2f2f2',num:'#000000',font:'"Arial Black", Arial, sans-serif',title:'#000000'},
+ {id:11,name:'Sunset Gradient',head:'linear-gradient(135deg,#c1436b,#f0a63f)',fg:'#ffffff',accent:'#c1436b',line:'#f2d9c9',hol:'#c66a1f',out:'#fdf6f1',num:'#6a2c3a',font:'Georgia, serif',title:'#c1436b',frame:1},
+ {id:12,name:'Ocean Gradient',head:'linear-gradient(135deg,#1c6fb0,#0fb0a0)',fg:'#ffffff',accent:'#0f7f8f',line:'#cfe6ee',hol:'#3a7a8a',out:'#f1f9fb',num:'#123a4a',font:'"Segoe UI", Arial, sans-serif',title:'#1c6fb0',frame:1},
+ {id:13,name:'Regal Gold Frame',head:'#1c2b4a',fg:'#e9c96b',accent:'#a8842e',line:'#d9c48c',hol:'#a8842e',out:'#fbf7ea',num:'#1c2b4a',font:'"Bodoni MT", Didot, Georgia, serif',title:'#1c2b4a',frame:2},
+ {id:14,name:'Emerald Gradient',head:'linear-gradient(135deg,#12604a,#3aa06a)',fg:'#ffffff',accent:'#1c7a55',line:'#cfe6db',hol:'#6a7a2f',out:'#f2f9f5',num:'#0f3d2c',font:'Georgia, serif',title:'#12604a',frame:1},
+ {id:15,name:'Plum Gradient',head:'linear-gradient(135deg,#5b2a72,#a24d9e)',fg:'#ffffff',accent:'#7a3a90',line:'#e6d6ee',hol:'#8a5cc0',out:'#f8f4fb',num:'#3a1a4a',font:'Baskerville, Georgia, serif',title:'#5b2a72',frame:1},
+ {id:16,name:'Charcoal Lux',head:'#222222',fg:'#e9c96b',accent:'#7a6a3a',line:'#cfcfcf',hol:'#9c7c22',out:'#f4f4f4',num:'#222222',font:'"Helvetica Neue", Arial, sans-serif',title:'#222222',frame:2}
 ];
 const ORD=n=>{ const s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
 // origin year uses the main title; later years use recurTitle if provided ("Wedding" -> "Anniversary")
@@ -701,9 +740,10 @@ function renderDashboard(){
   const MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const rows=list.slice(0,40).map(ev=>{ const d=ev.occ, hl=hebLabel(ev.hdate); const soon=fmtCountdown(d);
     const isSoon=(new Date(d).setHours(0,0,0,0)-new Date().setHours(0,0,0,0))<=7*86400000;
-    let sub=''; if(ev.type==='yahrzeit') sub=ev.years>0?ORD(ev.years)+' yahrzeit':'Yahrzeit';
-    else if(ev.type==='anniversary') sub=ev.years>0?ORD(ev.years)+' anniversary':'Anniversary';
-    else if(ev.type==='birthday') sub=ev.years>0?'turning '+ev.years:'Birthday'; else sub=ev.notes||'Milestone';
+    const yrs=ev.noYear?0:ev.years;
+    let sub=''; if(ev.type==='yahrzeit') sub=yrs>0?ORD(yrs)+' yahrzeit':'Yahrzeit';
+    else if(ev.type==='anniversary') sub=yrs>0?ORD(yrs)+' anniversary':'Anniversary';
+    else if(ev.type==='birthday') sub=yrs>0?'turning '+yrs:'Birthday'; else sub=ev.notes||'Milestone';
     return `<div class="ev"><div class="date-chip"><div class="d">${d.getDate()}</div><div class="mo">${MO[d.getMonth()]}</div></div>
       <div class="body"><div class="t">${ev.photo?`<img src="${ev.photo}" class="avatar" style="width:22px;height:22px;margin-right:5px">`:''}${esc(occLabel(ev,ev.years))} <span class="badge ${TYPE_BADGE[ev.type]}">${TYPE_LABEL[ev.type]}</span></div>
       <div class="heb"><span class="heb">${hl.he}</span> · ${hl.en}</div>
@@ -742,10 +782,7 @@ function renderCalendar(){
     </div>
     <div style="text-align:center"><div class="cal-title" id="calTitle"></div><div class="cal-title hebm heb" id="calHebTitle"></div></div>
     <div style="min-width:1px"></div></div>
-    <div class="cal-grid" id="calGrid"></div>
-    <div style="padding:12px 16px;display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)">
-      <span><span class="badge b-holiday">Holiday</span></span><span><span class="badge b-yahrzeit">Yahrzeit</span></span><span><span class="badge b-birthday">Birthday</span></span>
-      <span><span class="badge b-anniversary">Anniversary</span></span><span><span class="badge b-milestone">Milestone</span></span></div></div>`;
+    <div class="cal-grid" id="calGrid"></div></div>`;
   const clampGo=()=>{ calYear=Math.min(YEAR_MAX,Math.max(YEAR_MIN,calYear)); syncCalControls(); paintCal(); };
   $('#calPrev').onclick=()=>{ calMonth--; if(calMonth<0){calMonth=11;calYear--;} clampGo(); };
   $('#calNext').onclick=()=>{ calMonth++; if(calMonth>11){calMonth=0;calYear++;} clampGo(); };
@@ -895,29 +932,39 @@ window.__printPhonebook=()=>{ setPrintPage('portrait'); printReport('phonebook')
 window.__printEvents=()=>{ setPrintPage('portrait'); printReport('events'); };
 
 function setPrintPage(orient){ let s=document.getElementById('printPage'); if(!s){ s=document.createElement('style'); s.id='printPage'; document.head.appendChild(s); }
-  s.textContent = orient==='landscape' ? '@media print{@page{size:A4 landscape;margin:9mm}}' : '@media print{@page{size:A4 portrait;margin:15mm 14mm}}'; }
+  s.textContent = orient==='landscape' ? '@media print{@page{size:A4 landscape;margin:12mm}}' : '@media print{@page{size:A4 portrait;margin:15mm 14mm}}'; }
 
 /* ---- 10 designed monthly calendar templates ---- */
+let selectedTpl=1;
 function openPrintCalendarChooser(){
+  selectedTpl=1;
   const y=(typeof calYear!=='undefined'&&calYear)?calYear:new Date().getFullYear();
   const mo=(typeof calMonth!=='undefined'&&calMonth!=null)?calMonth:new Date().getMonth();
   const monthsEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const monthOpts=monthsEN.map((m,i)=>`<option value="${i}" ${i===mo?'selected':''}>${m}</option>`).join('');
-  const sw=CAL_TEMPLATES.map(t=>`<button type="button" class="tpl-swatch" onclick="window.__printCal(${t.id})" title="${t.name}">
+  const sw=CAL_TEMPLATES.map(t=>`<button type="button" class="tpl-swatch ${t.id===1?'sel':''}" data-tpl="${t.id}" onclick="window.__selTpl(${t.id})" title="${t.name}">
     <span class="sw-bar" style="background:${t.head}"></span>
     <span class="sw-body" style="border-color:${t.line};background:#fff"><span class="sw-num" style="color:${t.num}">15</span> <span class="heb" style="color:${t.accent};font-size:11px">ט״ו</span><span class="sw-dot" style="background:${t.hol}"></span></span>
     <span class="sw-name">${t.name}</span></button>`).join('');
-  modal(`<h3>Print calendar</h3><p class="sub">Choose a month and a design — it opens your print dialog so you can Save as PDF or print.</p>
+  modal(`<h3>Calendar — print or download</h3><p class="sub">Choose a month and a design, then print or download (always landscape).</p>
     <div class="form-grid"><div><label class="fl">Month</label><select id="pc_m">${monthOpts}</select></div>
     <div><label class="fl">Year</label><input id="pc_y" type="number" min="${YEAR_MIN}" max="${YEAR_MAX}" value="${y}"></div></div>
-    <label class="fl" style="margin-top:14px">Pick a template</label>
+    <label class="fl" style="margin-top:14px">Pick a template (${CAL_TEMPLATES.length} designs)</label>
     <div class="tpl-grid">${sw}</div>
-    <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Close</button></div>`);
+    <div class="modal-actions" style="flex-wrap:wrap;justify-content:space-between">
+      <button class="btn ghost" onclick="window.__closeModal()">Close</button>
+      <span style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sec" onclick="window.__calOut('png')">⬇︎ PNG</button>
+        <button class="btn gold" onclick="window.__calOut('pdf')">⬇︎ PDF</button>
+        <button class="btn" onclick="window.__calOut('print')">🖨 Print</button></span></div>`);
 }
-window.__printCal=(tplId)=>{ const y=+$('#pc_y').value||new Date().getFullYear(); const m=+$('#pc_m').value||0; closeModal(); buildPrintCalendar(y,m,tplId); };
-function buildPrintCalendar(year, month, tplId){
+window.__selTpl=(id)=>{ selectedTpl=id; document.querySelectorAll('.tpl-swatch').forEach(el=>el.classList.toggle('sel', +el.dataset.tpl===id)); };
+window.__calOut=(mode)=>{ const y=+$('#pc_y').value||new Date().getFullYear(); const m=+$('#pc_m').value||0;
+  if(mode==='print'){ closeModal(); buildPrintCalendar(y,m,selectedTpl); }
+  else { downloadCalendar(y,m,selectedTpl,mode); } };
+
+function calendarInnerHTML(year, month, tplId){
   const t=CAL_TEMPLATES.find(x=>x.id===tplId)||CAL_TEMPLATES[0];
-  setPrintPage('landscape');
   const monthsEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const first=new Date(year,month,1,12); const startDow=first.getDay();
   const gridStart=new Date(year,month,1-startDow,12); const gridEnd=new Date(gridStart); gridEnd.setDate(gridEnd.getDate()+41);
@@ -936,13 +983,33 @@ function buildPrintCalendar(year, month, tplId){
       rows+=`<td class="${out?'out':''}"><span class="pc-dnum">${dt.getDate()}</span><span class="pc-dheb">${gematriya(hd.getDate())}</span><div style="clear:both"></div>${hols}${evs}</td>`;
     } rows+='</tr>'; }
   const vars=`--pch:${t.head};--pcfg:${t.fg};--pca:${t.accent};--pcl:${t.line};--pchl:${t.hol};--pco:${t.out};--pcn:${t.num};--pcf:${t.font};--pct:${t.title}`;
-  $('#printArea').innerHTML=`<div class="cal-print" style="${vars}">
+  const frame = t.frame===2 ? `border:6px double ${t.accent};padding:14px;border-radius:4px` : t.frame===1 ? `border:2px solid ${t.accent};padding:12px;border-radius:6px` : `padding:2px`;
+  return `<div class="cal-print" style="${vars};${frame}">
     <div class="pc-band"><div><div class="pc-title">${monthsEN[month]} ${year}</div><div class="pc-hebm heb">${hebm}</div></div>
       <div class="pc-sub">${esc(DB.meta.communityName)}<br>Yiddish &amp; English calendar</div></div>
     <table class="pcal"><thead><tr>${DOW.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
-    <div class="pr-foot" style="color:#999">${esc(DB.meta.communityName)} · ${monthsEN[month]} ${year} · dates by the Hebrew (Yiddish) calendar</div>
-  </div>`;
-  setTimeout(()=>window.print(),90);
+    <div class="pr-foot" style="color:#999">${esc(DB.meta.communityName)} · ${monthsEN[month]} ${year} · dates by the Hebrew (Yiddish) calendar</div></div>`;
+}
+function buildPrintCalendar(year, month, tplId){ setPrintPage('landscape'); $('#printArea').innerHTML=calendarInnerHTML(year,month,tplId); setTimeout(()=>window.print(),90); }
+
+function ensureVendor2(){ return (window.jspdf&&window.html2canvas) ? Promise.resolve() : new Promise((res,rej)=>{
+  const s=document.createElement('script'); s.src='vendor2.bundle.js'; s.onload=res; s.onerror=()=>rej(new Error('download tools not found')); document.head.appendChild(s); }); }
+async function downloadCalendar(year, month, tplId, mode){
+  const monthsEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const fname=`calendar-${monthsEN[month]}-${year}`;
+  toast('Preparing '+mode.toUpperCase()+'…');
+  try{ await ensureVendor2(); }catch(e){ toast('Could not load the download tool — is vendor2.bundle.js next to index.html?',true); return; }
+  const cap=document.createElement('div'); cap.className='cal-cap'; cap.innerHTML=calendarInnerHTML(year,month,tplId); document.body.appendChild(cap);
+  try{
+    const canvas=await window.html2canvas(cap, {scale:2, backgroundColor:'#ffffff', useCORS:true, logging:false});
+    if(mode==='png'){ canvas.toBlob(b=>{ const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=fname+'.png'; a.click(); URL.revokeObjectURL(u); }, 'image/png');
+    } else { const img=canvas.toDataURL('image/jpeg',0.92); const pdf=new window.jspdf.jsPDF({orientation:'landscape',unit:'pt',format:'a4'});
+      const pw=pdf.internal.pageSize.getWidth(), ph=pdf.internal.pageSize.getHeight(); const m=18;
+      const iw=pw-m*2, ih=iw*canvas.height/canvas.width; const useH=Math.min(ih, ph-m*2); const useW=useH*canvas.width/canvas.height;
+      pdf.addImage(img,'JPEG',(pw-useW)/2, m, useW, useH); pdf.save(fname+'.pdf'); }
+    toast('Downloaded '+mode.toUpperCase());
+  }catch(e){ console.error(e); toast('Download failed',true); }
+  finally{ cap.remove(); }
 }
 
 /* ============================================================
@@ -965,24 +1032,27 @@ function renderDirectory(){
       <div class="pb-list">${mem||'<span class="note">No members listed</span>'}</div>
       ${canEdit?`<div style="margin-top:10px"><button class="btn sec sm" onclick="window.__editMember('${f.id}',null)">+ Add person</button> <button class="btn ghost sm" onclick="window.__editContact('${f.id}')">Edit contact</button></div>`:''}</div>`;
   }).join('');
-  return `<div class="page-head"><div><h2>Directory &amp; Phone Book</h2><p>Everyone in the portal — download to your phone contacts or as a spreadsheet.</p></div>
+  return `<div class="page-head"><div><h2>Directory &amp; Phone Book</h2><p>Our whole family — every immediate family can view and edit. Download to your phone contacts or as a spreadsheet.</p></div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      ${SESSION.isAdmin?`<button class="btn gold sm" onclick="window.__addFam()">+ Add family</button>`:''}
+      <button class="btn gold sm" onclick="window.__addFam()">+ Add family</button>
       <button class="btn sec sm" onclick="window.__dlVcardAll()">⬇︎ Phone book (vCard)</button>
       <button class="btn sec sm" onclick="window.__dlCsv()">⬇︎ CSV</button>
       <button class="btn sec sm" onclick="window.__printPhonebook()">🖨 Print PDF</button></div></div>
     <input type="search" id="dirSearch" placeholder="Search names, families, numbers…" style="width:100%;max-width:360px;margin-bottom:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px" oninput="window.__dirFilter(this.value)"/>
-    <div class="grid" id="dirGrid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">${cards||'<div class="empty"><div class="big">📇</div>No households yet.'+(SESSION.isAdmin?'<div style="margin-top:12px"><button class="btn gold sm" onclick="window.__addFam()">+ Add family</button></div>':'')+'</div>'}</div>`;
+    <div class="grid" id="dirGrid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr))">${cards||'<div class="empty"><div class="big">📇</div>No households yet.<div style="margin-top:12px"><button class="btn gold sm" onclick="window.__addFam()">+ Add family</button></div></div>'}</div>`;
 }
 window.__dirFilter=(q)=>{ q=(q||'').toLowerCase(); [...document.querySelectorAll('#dirGrid .fam-card')].forEach(c=>{ c.style.display=c.textContent.toLowerCase().includes(q)?'':'none'; }); };
 
 /* ============================================================
    MY HOUSEHOLD (editable)
    ============================================================ */
-function editableFamilies(){ return SESSION.isAdmin ? DB.families : DB.families.filter(f=>f.id===SESSION.familyId); }
+// One big family: any logged-in immediate family can view AND edit everyone.
+function editableFamilies(){ return DB.families; }
+// The current user's own immediate family (used for the "My Household" tab default).
+function myFamilies(){ return SESSION.isAdmin ? DB.families : DB.families.filter(f=>f.id===SESSION.familyId); }
 function findFam(fid){ return DB.families.find(f=>f.id===fid); }
 function renderHousehold(){
-  const fams=editableFamilies();
+  const fams=myFamilies();
   if(fams.length===0){ $('#view').innerHTML=`<div class="empty"><div class="big">🏠</div>No household is linked to this login yet.</div>`; return; }
   const noteHtml = BACKEND
     ? `☁️ <div><b>Live mode:</b> your changes save to the shared cloud database instantly and everyone sees them.</div>`
@@ -1013,16 +1083,27 @@ function closeModal(){ $('#modalRoot').innerHTML=''; }
 window.__closeModal=closeModal;
 async function guarded(fn){ try{ await fn(); }catch(err){ toast(err.message||'Save failed',true); } }
 
-window.__editContact=(fid)=>{ const f=findFam(fid); const c=f.contact||{};
-  modal(`<h3>Contact info — ${esc(f.householdName)}</h3><p class="sub">How the family can be reached.</p>
+window.__editContact=(fid)=>{ const f=findFam(fid); const c=f.contact||{}; const nf=familyNotify(f);
+  modal(`<h3>Contact &amp; notifications — ${esc(f.householdName)}</h3><p class="sub">How the family can be reached and reminded.</p>
     <div class="form-grid"><div class="full"><label class="fl">Household name</label><input id="f_hh" type="text" value="${esc(f.householdName)}"></div>
     <div><label class="fl">Phone</label><input id="f_ph" type="tel" value="${esc(c.phone||'')}"></div>
     <div><label class="fl">Email</label><input id="f_em" type="email" value="${esc(c.email||'')}"></div>
     <div class="full"><label class="fl">Address</label><input id="f_ad" type="text" value="${esc(c.address||'')}"></div></div>
+    <div style="border-top:1px solid var(--line);margin:14px 0 10px;padding-top:12px">
+      <b style="font-size:14px">🔔 Notifications</b>
+      <div class="note" style="margin:2px 0 8px">Everyone gets a weekly email of the week's events; the celebrating family gets a greeting on the day. Choose how this family wants to be notified.</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px;align-items:center">
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n_email" ${nf.email?'checked':''} style="width:auto"> ✉️ Email</label>
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n_browser" ${nf.browser?'checked':''} style="width:auto"> 🔔 Browser popup</label>
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="n_push" ${nf.push?'checked':''} style="width:auto"> 📱 App push</label>
+        <label style="display:flex;gap:6px;align-items:center">Remind days before: <input id="n_days" type="number" min="0" max="60" value="${nf.daysBefore}" style="width:70px"></label>
+      </div>
+    </div>
     <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveContact('${fid}')">Save</button></div>`); };
 window.__saveContact=(fid)=>guarded(async()=>{ const f=findFam(fid);
   f.householdName=$('#f_hh').value.trim()||f.householdName;
   f.contact={ phone:$('#f_ph').value.trim(), email:$('#f_em').value.trim(), address:$('#f_ad').value.trim() };
+  f.notify={ email:$('#n_email').checked, browser:$('#n_browser').checked, push:$('#n_push').checked, daysBefore:+$('#n_days').value||7 };
   await Store.saveHousehold(f); closeModal(); refreshCurrent(); toast('Saved'); });
 
 window.__editMember=(fid,mid)=>{ const f=findFam(fid); const m=mid?f.members.find(x=>x.id===mid):{};
@@ -1031,14 +1112,15 @@ window.__editMember=(fid,mid)=>{ const f=findFam(fid); const m=mid?f.members.fin
     <div><label class="fl">Last name</label><input id="m_ln" type="text" value="${esc(m.lastName||f.householdName)}"></div>
     <div><label class="fl">Hebrew name</label><input id="m_hn" type="text" class="heb" value="${esc(m.hebrewName||'')}" placeholder="שם"></div>
     <div><label class="fl">Relation</label><input id="m_rel" type="text" value="${esc(m.relation||'')}" placeholder="Father, Son…"></div>
-    <div class="full"><label class="fl">Birthday (English date)</label><input id="m_bd" type="date" value="${esc(m.birthday||'')}"></div>
+    <div><label class="fl">Gender <span class="note">(for Bar/Bas Mitzvah)</span></label><select id="m_gender"><option value="" ${!m.gender?'selected':''}>—</option><option value="m" ${m.gender==='m'?'selected':''}>Boy / Male</option><option value="f" ${m.gender==='f'?'selected':''}>Girl / Female</option></select></div>
+    <div><label class="fl">Birthday (English date)</label><input id="m_bd" type="date" value="${esc(m.birthday||'')}"></div>
     <div><label class="fl">Phone</label><input id="m_ph" type="tel" value="${esc(m.phone||'')}" placeholder="Home / landline"></div>
     <div><label class="fl">Cell</label><input id="m_cell" type="tel" value="${esc(m.cell||'')}" placeholder="Mobile"></div>
     <div class="full"><label class="fl">Email</label><input id="m_em" type="email" value="${esc(m.email||'')}"></div>
     ${photoField('m_photo', m.photo)}</div>
     <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveMember('${fid}','${mid||''}')">Save</button></div>`); };
 window.__saveMember=(fid,mid)=>guarded(async()=>{ const f=findFam(fid); f.members=f.members||[];
-  const data={ firstName:$('#m_fn').value.trim(), lastName:$('#m_ln').value.trim(), hebrewName:$('#m_hn').value.trim(), relation:$('#m_rel').value.trim(), birthday:$('#m_bd').value,
+  const data={ firstName:$('#m_fn').value.trim(), lastName:$('#m_ln').value.trim(), hebrewName:$('#m_hn').value.trim(), relation:$('#m_rel').value.trim(), gender:$('#m_gender').value, birthday:$('#m_bd').value,
     phone:$('#m_ph').value.trim(), cell:$('#m_cell').value.trim(), email:$('#m_em').value.trim(), photo:($('#m_photo')||{}).value||'' };
   if(!data.firstName){ toast('First name is required',true); return; }
   let m; if(mid){ m=f.members.find(x=>x.id===mid); Object.assign(m,data); } else { m={ id:uid(), ...data }; f.members.push(m); }
@@ -1051,19 +1133,18 @@ window.__editEvent=(fid,eid,prefill)=>{
   let f = fid? findFam(fid) : (editable.length===1? editable[0] : null);
   const fixedFid = f? f.id : '';
   const e = (f&&eid)? f.events.find(x=>x.id===eid) : { type:'yahrzeit', recurrence:'hebrew', gregDate:prefill||'' };
-  const r = e.remind || defaultRemind();
   const opt=(v,l)=>`<option value="${v}" ${e.type===v?'selected':''}>${l}</option>`;
   const famSel = (!fid && editable.length>1)
     ? `<div class="full"><label class="fl">Whose family?</label><select id="e_fam">${editable.map(x=>`<option value="${x.id}">${esc(x.householdName)} family</option>`).join('')}</select></div>`
     : `<input type="hidden" id="e_fam" value="${fixedFid}">`;
   modal(`<h3>${eid?'Edit':'Add'} event${f&&fid?' — '+esc(f.householdName):''}</h3><p class="sub">Enter the English date it happened; the portal tracks it by the Hebrew (Yiddish) date and reminds whoever you choose.</p>
     <div class="form-grid">${famSel}
-      <div><label class="fl">Type</label><select id="e_ty">${opt('yahrzeit','Yahrzeit')}${opt('anniversary','Wedding / Anniversary')}${opt('milestone','Bar/Bat Mitzvah / Milestone')}${opt('birthday','Birthday')}</select></div>
+      <div><label class="fl">Type</label><select id="e_ty">${opt('yahrzeit','Yahrzeit')}${opt('anniversary','Wedding / Anniversary')}${opt('birthday','Birthday')}${opt('milestone','Milestone (other)')}</select><div class="note" style="margin-top:4px">Bar/Bas Mitzvah is added automatically from a child's birthday &amp; gender.</div></div>
       <div><label class="fl">Frequency</label><select id="e_freq"><option value="yearly" ${e.frequency!=='once'?'selected':''}>Repeats every year</option><option value="once" ${e.frequency==='once'?'selected':''}>One time only</option></select></div>
       <div><label class="fl">Repeats by</label><select id="e_rec"><option value="hebrew" ${e.recurrence!=='gregorian'?'selected':''}>Hebrew (Yiddish) date</option><option value="gregorian" ${e.recurrence==='gregorian'?'selected':''}>English date</option></select></div>
       <div><label class="fl">&nbsp;</label><div class="note" style="padding-top:8px">Yearly = recurs each year on the date you pick.</div></div>
       <div class="full"><label class="fl">Name this year</label><input id="e_ti" type="text" value="${esc(e.title||'')}" placeholder="e.g. Wedding of Sarah &amp; Dovid"></div>
-      <div class="full"><label class="fl">Name in later years <span class="note">— optional, leave blank to keep the same</span></label><input id="e_ti2" type="text" value="${esc(e.recurTitle||'')}" placeholder="e.g. Anniversary of Sarah &amp; Dovid"></div>
+      <div class="full" id="e_ti2wrap" style="display:${e.type==='anniversary'?'':'none'}"><label class="fl">Name in later years <span class="note">— for a wedding: this year “Wedding of…”, later years “Anniversary of…”</span></label><input id="e_ti2" type="text" value="${esc(e.recurTitle||'')}" placeholder="e.g. Anniversary of Sarah &amp; Dovid"></div>
       <div class="full"><label class="fl">Date it occurred — enter by:
         <span style="font-weight:400;margin-left:6px">
           <label style="margin-right:12px"><input type="radio" name="e_dmode" value="en" checked style="width:auto"> English</label>
@@ -1073,32 +1154,17 @@ window.__editEvent=(fid,eid,prefill)=>{
           <div style="display:flex;gap:8px">
             <select id="eh_m" style="flex:2">${Object.keys(HEB_MONTH_EN).map(k=>`<option value="${k}">${HEB_MONTH_EN[k]} — ${HEB_MONTH_HE[k]}</option>`).join('')}</select>
             <input id="eh_d" type="number" min="1" max="30" placeholder="Day" style="flex:1">
-            <input id="eh_y" type="number" placeholder="Year e.g. 5786" style="flex:1.5">
-          </div></div>
+            <span id="eh_ywrap" style="flex:1.5;display:flex"><input id="eh_y" type="number" placeholder="Year e.g. 5786" style="flex:1"></span>
+          </div>
+          <label style="display:flex;gap:6px;align-items:center;margin-top:8px;font-size:13px"><input type="checkbox" id="eh_noyear" ${e.noYear?'checked':''} style="width:auto"> Year unknown — just recur every year on this Hebrew date</label>
+        </div>
       </div>
       <div class="full" id="e_preview" style="background:var(--indigo-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2)">Pick a date to see the Yiddish &amp; English dates.</div>
       ${photoField('e_photo', e.photo)}
       <div class="full"><label class="fl">Notes</label><input id="e_no" type="text" value="${esc(e.notes||'')}"></div></div>
-    <div style="border-top:1px solid var(--line);margin:16px 0 10px;padding-top:14px">
-      <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px"><input type="checkbox" id="r_on" ${r.on?'checked':''} style="width:auto"> Remind before this date</label>
-      <div id="r_box" style="margin-top:12px;${r.on?'':'opacity:.5'}">
-        <div class="form-grid">
-          <div><label class="fl">Days before</label><input id="r_days" type="number" min="0" max="60" value="${r.daysBefore??7}"></div>
-          <div><label class="fl">Who to remind</label><select id="r_notify"><option value="family" ${r.notify!=='custom'?'selected':''}>Our family logins</option><option value="custom" ${r.notify==='custom'?'selected':''}>Specific email(s)</option></select></div>
-        </div>
-        <div id="r_emailsWrap" style="margin-top:10px;${r.notify==='custom'?'':'display:none'}"><label class="fl">Email address(es), comma separated</label><input id="r_emails" type="text" value="${esc(r.emails||'')}" placeholder="a@example.com, b@example.com"></div>
-        <div style="margin-top:10px"><label class="fl">How</label>
-          <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13.5px">
-            <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="r_browser" ${r.channels&&r.channels.browser?'checked':''} style="width:auto"> 🔔 Browser popup</label>
-            <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="r_push" ${r.channels&&r.channels.push?'checked':''} style="width:auto"> 📱 App push</label>
-            <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="r_email" ${r.channels&&r.channels.email?'checked':''} style="width:auto"> ✉️ Email</label>
-          </div>
-          <div class="note" style="margin-top:6px">Browser popups work while the site is open (turn on 🔔). App push (when closed) and email are sent by the backend — see SETUP.</div>
-        </div>
-      </div></div>
+    <div class="note" style="margin-top:6px">🔔 Reminders are set once per family in <b>My Household → Notifications</b>, not per event.</div>
     <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveEvent('${fixedFid}','${eid||''}')">Save</button></div>`);
-  $('#r_on').addEventListener('change', ev=>{ $('#r_box').style.opacity=ev.target.checked?'1':'.5'; });
-  $('#r_notify').addEventListener('change', ev=>{ $('#r_emailsWrap').style.display=ev.target.value==='custom'?'':'none'; });
+  $('#e_ty').addEventListener('change', ev=>{ const w=$('#e_ti2wrap'); if(w) w.style.display=ev.target.value==='anniversary'?'':'none'; });
   ['input','change'].forEach(t=>$('#e_dt').addEventListener(t, window.__evPreview));
   $('#e_rec').addEventListener('change', window.__evPreview);
   $('#e_freq').addEventListener('change', window.__evPreview);
@@ -1109,11 +1175,17 @@ window.__editEvent=(fid,eid,prefill)=>{
       $('#eh_m').value=hd.getMonth(); $('#eh_d').value=hd.getDate(); $('#eh_y').value=hd.getFullYear(); window.__evHeToGreg(); }
   }));
   ['eh_m','eh_d','eh_y'].forEach(id=>{ const el=$('#'+id); if(el){ el.addEventListener('input', window.__evHeToGreg); el.addEventListener('change', window.__evHeToGreg); } });
+  const nyBox=$('#eh_noyear');
+  if(nyBox){ nyBox.addEventListener('change', ev=>{ $('#eh_ywrap').style.display=ev.target.checked?'none':'flex';
+    if(ev.target.checked && !$('#eh_y').value) $('#eh_y').value=hFromGreg(new Date()).getFullYear(); window.__evHeToGreg(); }); }
+  if(e.noYear){ const rHe=document.querySelector('input[name=e_dmode][value=he]'); if(rHe){ rHe.checked=true; rHe.dispatchEvent(new Event('change')); }
+    if(nyBox){ nyBox.checked=true; $('#eh_ywrap').style.display='none'; } }
   window.__evPreview();
 };
 // Hebrew (Yiddish) date inputs -> set the underlying English date
 window.__evHeToGreg=()=>{
-  const m=+$('#eh_m').value, y=+$('#eh_y').value, dRaw=+$('#eh_d').value;
+  const m=+$('#eh_m').value, dRaw=+$('#eh_d').value; let y=+$('#eh_y').value;
+  const ny=$('#eh_noyear'); if(ny && ny.checked && !y) y=hFromGreg(new Date()).getFullYear();
   if(!m||!y||!dRaw){ window.__evPreview(); return; }
   try{ let mm=m; if(mm===13 && !HDate.isLeapYear(y)) mm=12;
     const dim=HDate.daysInMonth(mm,y); const d=Math.min(dRaw,dim);
@@ -1143,9 +1215,11 @@ window.__saveEvent=(fid,eid)=>guarded(async()=>{
   const famId = fid || ($('#e_fam')? $('#e_fam').value : '');
   if(!famId){ toast('Choose a family',true); return; }
   const f=findFam(famId); f.events=f.events||[];
-  const remind={ on:$('#r_on').checked, daysBefore:+$('#r_days').value||0, notify:$('#r_notify').value,
-    emails:$('#r_emails')?$('#r_emails').value.trim():'', channels:{ browser:$('#r_browser').checked, push:$('#r_push').checked, email:$('#r_email').checked } };
-  const data={ type:$('#e_ty').value, recurrence:$('#e_rec').value, frequency:$('#e_freq').value, title:$('#e_ti').value.trim(), recurTitle:$('#e_ti2').value.trim(), gregDate:$('#e_dt').value, notes:$('#e_no').value.trim(), photo:($('#e_photo')||{}).value||'', remind };
+  const heMode=(document.querySelector('input[name=e_dmode]:checked')||{}).value==='he';
+  const noYear=!!(heMode && $('#eh_noyear') && $('#eh_noyear').checked);
+  const data={ type:$('#e_ty').value, recurrence:(noYear?'hebrew':$('#e_rec').value), frequency:(noYear?'yearly':$('#e_freq').value), noYear,
+    title:$('#e_ti').value.trim(), recurTitle:($('#e_ty').value==='anniversary'?$('#e_ti2').value.trim():''),
+    gregDate:$('#e_dt').value, notes:$('#e_no').value.trim(), photo:($('#e_photo')||{}).value||'' };
   if(!data.title||!data.gregDate){ toast('Name and date are required',true); return; }
   let e; if(eid){ e=f.events.find(x=>x.id===eid); Object.assign(e,data); } else { e={ id:uid(), ...data }; f.events.push(e); }
   await Store.saveEvent(famId,e); closeModal(); afterEventChange(); toast('Saved');
@@ -1162,16 +1236,13 @@ function renderEvents(){
   const editable=new Set(editableFamilies().map(f=>f.id));
   const rows=DB.families.flatMap(f=>(f.events||[]).map(e=>({e,f}))).map(({e,f})=>{
     const no=nextOccurrence({...e, householdName:f.householdName});
-    const r=e.remind||{}; const chans=r.on?[r.channels&&r.channels.browser?'🔔':'',r.channels&&r.channels.push?'📱':'',r.channels&&r.channels.email?'✉️':''].filter(Boolean).join(' '):'';
-    const rem=r.on?`${r.daysBefore}d before ${chans}`:'<span class="note">—</span>';
     const canEdit=editable.has(f.id);
     return `<tr data-txt="${esc((e.title+' '+f.householdName+' '+TYPE_LABEL[e.type]).toLowerCase())}" data-type="${e.type}">
       <td><span class="badge ${TYPE_BADGE[e.type]}">${TYPE_LABEL[e.type]}</span></td>
-      <td><b>${esc(e.title)}</b>${e.notes?`<div class="note">${esc(e.notes)}</div>`:''}</td>
+      <td><b>${esc(e.title)}</b>${e.notes?`<div class="note">${esc(e.notes)}</div>`:''}${e.noYear?' <span class="note">· year unknown</span>':''}</td>
       <td>${esc(f.householdName)}</td>
-      <td>${esc(e.gregDate)}<div class="note">${e.recurrence==='gregorian'?'English date':'Hebrew date'}</div></td>
+      <td>${e.noYear?'<span class="heb">'+hebLabel(hFromGreg(gregToDate(e.gregDate))).he+'</span>':esc(e.gregDate)}<div class="note">${e.recurrence==='gregorian'?'English date':'Hebrew date'}</div></td>
       <td>${no?`${no.date.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}<div class="note heb">${hebLabel(no.hdate).he}</div>`:'<span class="note">—</span>'}</td>
-      <td>${rem}</td>
       <td><div class="row-actions"><button class="btn sec sm" onclick="window.__dlIcsEvent('${f.id}','${e.id}')" title="Add to calendar">📅</button>${canEdit?`<button class="btn sec sm" onclick="window.__editEvent('${f.id}','${e.id}')">Edit</button><button class="btn danger sm" onclick="window.__delEvent('${f.id}','${e.id}')">✕</button>`:''}</div></td></tr>`;
   }).join('');
   V.innerHTML=`<div class="page-head"><div><h2>Events</h2><p>Add yahrzeits, anniversaries, milestones &amp; birthdays — choose who gets reminded, and add them to your own calendar.</p></div>
@@ -1182,7 +1253,7 @@ function renderEvents(){
       <input type="search" id="evSearch" placeholder="Search events…" style="flex:1;min-width:180px;padding:10px 12px;border:1px solid var(--line);border-radius:10px" oninput="window.__evFilter()">
       <select id="evType" style="width:auto;padding:10px 12px" onchange="window.__evFilter()"><option value="">All types</option><option value="yahrzeit">Yahrzeits</option><option value="birthday">Birthdays</option><option value="anniversary">Anniversaries</option><option value="milestone">Milestones</option></select>
     </div>
-    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Type</th><th>Event</th><th>Family</th><th>Date</th><th>Next occurrence</th><th>Reminder</th><th></th></tr></thead><tbody id="evBody">${rows||'<tr><td colspan="7" class="note" style="padding:20px">No events yet — click “+ New event”.</td></tr>'}</tbody></table></div>
+    <div class="card" style="padding:0;overflow:auto"><table><thead><tr><th>Type</th><th>Event</th><th>Family</th><th>Date</th><th>Next occurrence</th><th></th></tr></thead><tbody id="evBody">${rows||'<tr><td colspan="6" class="note" style="padding:20px">No events yet — click “+ New event”.</td></tr>'}</tbody></table></div>
     <p class="note" style="margin-top:10px">Member birthdays added under <b>My Household</b> also appear on the calendar. Add them here as a “Birthday” event if you want a reminder on them.</p>`;
 }
 window.__evFilter=()=>{ const q=($('#evSearch').value||'').toLowerCase(), t=$('#evType').value;
@@ -1215,11 +1286,11 @@ function renderAdmin(){
       <button class="btn sec sm" onclick="window.__printPhonebook()">🖨 Print phone book</button>
       <button class="btn sec sm" onclick="window.__printEvents()">🖨 Print events</button></div>
       <div style="margin-top:12px"><button class="btn danger sm" onclick="window.__resetData()">Reset to sample data</button></div></div>`;
-  const settingsCard = `<div class="card" style="padding:18px"><h3 style="margin:0 0 4px;font-size:16px">Community settings</h3>
-      <p class="note" style="margin:0 0 12px">Name shown across the portal and on the sign-in screen.</p>
-      <label class="fl">Community name</label><input id="s_cn" type="text" value="${esc(DB.meta.communityName)}" style="margin-bottom:10px">
+  const settingsCard = `<div class="card" style="padding:18px"><h3 style="margin:0 0 4px;font-size:16px">Family settings</h3>
+      <p class="note" style="margin:0 0 12px">This is one big family; each immediate family has its own login and can add/edit any info. This name shows across the portal and on the sign-in screen.</p>
+      <label class="fl">Family name (the whole mishpocha)</label><input id="s_cn" type="text" value="${esc(DB.meta.communityName)}" style="margin-bottom:10px">
       ${BACKEND?'':`<div class="form-grid"><div><label class="fl">Admin username</label><input id="s_au" type="text" value="${esc(FULL.meta.adminUser)}"></div><div><label class="fl">Admin PIN</label><input id="s_ap" type="text" value="${esc(FULL.meta.adminPin)}"></div></div>`}
-      <div style="margin-top:12px"><button class="btn" onclick="window.__saveSettings()">Save settings</button></div></div>`;
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" onclick="window.__saveSettings()">Save settings</button><button class="btn sec" onclick="window.__editEmailTemplates()">✉️ Email templates</button></div></div>`;
   V.innerHTML=`<div class="page-head"><div><h2>Admin</h2><p>Manage households, community settings, and data.</p></div>
     <button class="btn gold sm" onclick="window.__addFam()">+ Add family</button></div>
     <div class="card" style="padding:0;margin-bottom:18px;overflow:auto"><table><thead><tr><th>Household</th>${BACKEND?'':'<th>Username</th><th>PIN</th>'}<th>Members</th><th>Dates</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="6" class="note" style="padding:20px">No households yet — add one.</td></tr>'}</tbody></table></div>
@@ -1236,21 +1307,45 @@ window.__saveRename=(fid)=>guarded(async()=>{ const name=$('#a_hh').value.trim()
     const newId=await Store.createHousehold(f); f.id=newId||f.id; DB.families.push(f); }
   closeModal(); refreshCurrent(); toast('Saved'); });
 window.__editFamMeta=(fid)=>{ const f=fid?findFam(fid):{ householdName:'', username:'', pin:'' };  // demo only
-  modal(`<h3>${fid?'Family login':'Add family'}</h3><p class="sub">Each household signs in with a username and PIN.</p>
-    <div class="form-grid"><div class="full"><label class="fl">Household name</label><input id="a_hh" type="text" value="${esc(f.householdName)}"></div>
-    <div><label class="fl">Username</label><input id="a_un" type="text" value="${esc(f.username||'')}" placeholder="e.g. cohen"></div>
-    <div><label class="fl">PIN</label><input id="a_pin" type="text" value="${esc(String(f.pin||''))}" placeholder="4 digits"></div></div>
-    <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveFamMeta('${fid||''}')">Save</button></div>`); };
+  modal(`<h3>${fid?'Family login':'Add family'}</h3><p class="sub">Each household signs in with a username and PIN. Tip: the usual default is <b>username = family name</b> and <b>PIN = your phone number</b>.</p>
+    <div class="form-grid"><div class="full"><label class="fl">Household name</label><input id="a_hh" type="text" value="${esc(f.householdName)}" oninput="if(!window.__unTouched){document.getElementById('a_un').value=this.value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'')}"></div>
+    <div><label class="fl">Username</label><input id="a_un" type="text" value="${esc(f.username||'')}" placeholder="e.g. cohen" oninput="window.__unTouched=true"></div>
+    <div><label class="fl">PIN <span class="note">(min 4 digits — e.g. phone number)</span></label><input id="a_pin" type="text" inputmode="numeric" value="${esc(String(f.pin||''))}" placeholder="at least 4 digits"></div></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveFamMeta('${fid||''}')">Save</button></div>`);
+    window.__unTouched=!!fid; };
 window.__saveFamMeta=(fid)=>guarded(async()=>{ const hh=$('#a_hh').value.trim(), un=$('#a_un').value.trim().toLowerCase(), pin=$('#a_pin').value.trim();
   if(!hh||!un||!pin){ toast('All fields required',true); return; }
+  if(!/^\d{4,}$/.test(pin)){ toast('PIN must be at least 4 digits',true); return; }
   if(DB.families.some(f=>f.id!==fid && (f.username||'').toLowerCase()===un) || un===FULL.meta.adminUser.toLowerCase()){ toast('Username taken',true); return; }
   if(fid){ const f=findFam(fid); f.householdName=hh; f.username=un; f.pin=pin; } else { DB.families.push({ id:uid(), householdName:hh, username:un, pin, contact:{}, members:[], events:[] }); }
   await Store.saveHousehold(); closeModal(); refreshCurrent(); toast('Saved'); });
 window.__delFam=(fid)=>{ const f=findFam(fid); if(!confirm(`Delete the ${f.householdName} family and all their data?`))return;
   guarded(async()=>{ await Store.deleteHousehold(fid); DB.families=DB.families.filter(x=>x.id!==fid); refreshCurrent(); toast('Deleted'); }); };
 window.__saveSettings=()=>guarded(async()=>{ DB.meta.communityName=$('#s_cn').value.trim()||DB.meta.communityName;
-  if(!BACKEND){ FULL.meta.adminUser=$('#s_au').value.trim()||FULL.meta.adminUser; FULL.meta.adminPin=$('#s_ap').value.trim()||FULL.meta.adminPin; }
+  if(!BACKEND){ const ap=$('#s_ap').value.trim(); if(ap && !/^\d{4,}$/.test(ap)){ toast('Admin PIN must be at least 4 digits',true); return; }
+    FULL.meta.adminUser=$('#s_au').value.trim()||FULL.meta.adminUser; FULL.meta.adminPin=ap||FULL.meta.adminPin; }
   await Store.saveSettings(); $('#commName').textContent=DB.meta.communityName; renderAdmin(); toast('Settings saved'); });
+
+function defaultEmailTemplates(){ return {
+  birthday:{ subject:'🎂 Happy Birthday, {name}!', body:'Wishing {name} a very happy birthday! Mazel tov from the whole family.\n\n{family} family · {date} · {hebrew}' },
+  anniversary:{ subject:'💐 Happy Anniversary — {name}', body:'Wishing a very happy anniversary! Mazel tov.\n\n{family} family · {date} · {hebrew}' },
+  milestone:{ subject:'🎉 Mazel Tov — {name}', body:'Mazel tov on this simcha!\n\n{family} family · {date} · {hebrew}' },
+  yahrzeit:{ subject:'🕯️ Yahrzeit today — {name}', body:'Today is the yahrzeit of {name}. May the neshama have an aliyah.\n\n{family} family · {date} · {hebrew}' },
+  digest:{ subject:"This week's family events", heading:'This week in the family' } }; }
+function getEmailTemplates(){ const d=defaultEmailTemplates(); const cur=DB.meta.emailTemplates||{}; const out={}; for(const k in d) out[k]=Object.assign({}, d[k], cur[k]||{}); return out; }
+window.__editEmailTemplates=()=>{ const t=getEmailTemplates();
+  const block=(key,label)=>`<div style="border:1px solid var(--line);border-radius:10px;padding:12px;margin-bottom:10px">
+      <b style="font-size:13.5px">${label}</b>
+      <label class="fl" style="margin-top:6px">Subject</label><input id="et_${key}_s" type="text" value="${esc(t[key].subject||'')}">
+      ${key==='digest'?`<label class="fl" style="margin-top:8px">Heading</label><input id="et_${key}_b" type="text" value="${esc(t[key].heading||'')}">`
+      :`<label class="fl" style="margin-top:8px">Message</label><textarea id="et_${key}_b" style="min-height:70px">${esc(t[key].body||'')}</textarea>`}</div>`;
+  modal(`<h3>Email templates</h3><p class="sub">Used by the reminder emails. Placeholders: <code>{name}</code> <code>{family}</code> <code>{date}</code> <code>{hebrew}</code>.</p>
+    <div style="max-height:52vh;overflow:auto">
+    ${block('birthday','🎂 Birthday celebration')}${block('anniversary','💐 Anniversary celebration')}${block('milestone','🎉 Milestone / simcha')}${block('yahrzeit','🕯️ Yahrzeit')}${block('digest','🗓️ Weekly digest (to everyone)')}</div>
+    <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveEmailTemplates()">Save templates</button></div>`); };
+window.__saveEmailTemplates=()=>guarded(async()=>{ const keys=['birthday','anniversary','milestone','yahrzeit','digest']; const t={};
+  keys.forEach(k=>{ t[k]= k==='digest' ? { subject:$('#et_'+k+'_s').value, heading:$('#et_'+k+'_b').value } : { subject:$('#et_'+k+'_s').value, body:$('#et_'+k+'_b').value }; });
+  DB.meta.emailTemplates=t; await Store.saveSettings(); closeModal(); toast('Email templates saved'); });
 window.__exportData=()=>{ const payload = BACKEND ? { meta:DB.meta, families:DB.families } : Store.exportAll();
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download='family-portal-data.json'; a.click(); URL.revokeObjectURL(a.href); };
@@ -1289,12 +1384,12 @@ function updateBell(){ const b=$('#bellBtn'); if(!b) return;
   b.textContent=on?'🔔':'🔕'; b.title=on?'Reminders on (click to refresh)':'Turn on reminders'; }
 function checkDueReminders(force){
   if(!('Notification' in window) || Notification.permission!=='granted') return;
-  const due=dueReminders(60).filter(ev=>ev.remind&&ev.remind.channels&&ev.remind.channels.browser);
-  const mine=due.filter(ev=> SESSION.isAdmin || ev.familyId===SESSION.familyId || ev.remind.notify==='custom');
+  const { pref, list }=dueReminders();
+  if(!pref.browser) return;
   const shownKey='remindShown.'+dateKey(new Date()); let shown={}; try{ shown=JSON.parse(localStorage.getItem(shownKey)||'{}'); }catch(e){}
-  mine.forEach(ev=>{ const id=ev.familyId+'|'+ev.id+'|'+dateKey(ev.occ); if(shown[id]&&!force) return; shown[id]=1;
+  list.forEach(ev=>{ const id=ev.familyId+'|'+ev.id+'|'+dateKey(ev.occ); if(shown[id]&&!force) return; shown[id]=1;
     const when=ev.daysUntil===0?'today':ev.daysUntil===1?'tomorrow':`in ${ev.daysUntil} days`;
-    try{ new Notification(`${TYPE_LABEL[ev.type]}: ${ev.title}`, { body:`${ev.householdName} family · ${when} · ${hebLabel(hFromGreg(ev.occ)).en}`, tag:id }); }catch(e){}
+    try{ new Notification(`${TYPE_LABEL[ev.type]}: ${occLabel(ev, ev.noYear?0:ev.years)}`, { body:`${ev.householdName} family · ${when} · ${hebLabel(hFromGreg(ev.occ)).en}`, tag:id }); }catch(e){}
   });
   try{ localStorage.setItem(shownKey, JSON.stringify(shown)); }catch(e){}
 }

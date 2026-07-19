@@ -1,119 +1,162 @@
-# Launching Your Family Portal — Step by Step
+# Family Portal — Full Launch Guide
 
-Two stages. **Stage 1** puts a working site online in ~10 minutes (families view everything).
-**Stage 2** turns on real logins, per-family editing, and reminders. Do Stage 1 first; add
-Stage 2 whenever you're ready.
+Everything to take the portal from the zip to a live site your family logs into.
+Three stages: **(1)** put it online, **(2)** turn on real logins + shared data, **(3)** turn on
+email/app reminders. There's also a section for running **several main families** from one site.
+
+Files in the package (deploy the whole folder — keep them together):
+
+```
+index.html   vendor2.bundle.js   sw.js   manifest.webmanifest   icon.svg
+schema.sql   supabase/functions/send-reminders/index.ts   (setup files: *.md)
+```
+
+`vendor2.bundle.js` powers the calendar PDF/PNG downloads — include it.
 
 ---
 
-## Stage 1 — Get it online (≈10 min, free)
+## Stage 1 — Put it online (≈10 min, free)
 
-**1. Unzip the folder.** Keep all files together:
-`index.html`, `sw.js`, `manifest.webmanifest`, `icon.svg` (and the `supabase` folder for later).
+1. **Try it first.** Double-click `index.html`. Sign in `admin` / `1234` to look around.
+   (Demo logins work only in this local file and disappear once you connect a database.)
+2. **Publish (pick one, free):**
+   - **GitHub Pages** — see `GITHUB.md` for the click-by-click.
+   - **Cloudflare Pages** — dash.cloudflare.com → Workers & Pages → Create → Pages → Upload
+     assets → drag the folder → Deploy.
+   - **Netlify** — app.netlify.com/drop → drag the folder.
 
-**2. Try it locally first.** Double-click `index.html`. Sign in with `admin` / `1234` to look
-around. (These demo logins work only in this local file; they disappear once you go live in
-Stage 2.)
-
-**3. Put it online (pick one, all free):**
-   - **Cloudflare Pages** (recommended): sign in at dash.cloudflare.com → **Workers & Pages** →
-     **Create → Pages → Upload assets** → drag the folder in → **Deploy**.
-   - **Netlify**: go to **app.netlify.com/drop** and drag the folder onto the page.
-
-   You'll get a link like `https://your-portal.pages.dev`. Open it — that's your live site.
-
-**4. (Optional) Add each family's domain.** In your Pages/Netlify project → **Custom domains** →
-add `cohenfamily.com`, `friedmanfamily.com`, etc. Each family points their domain's DNS as the
-host instructs (one-time). All domains show the same portal. Free — families only pay if they
-*register* their own domain name (~$10/yr); free subdomains like `cohen.your-portal.pages.dev`
-cost nothing.
-
-At this point the portal is live. To let families log in and edit their own info, do Stage 2.
+You now have a live `https://…` link. Families can view it. To let them log in and edit, do Stage 2.
 
 ---
 
 ## Stage 2 — Real logins + shared data (≈15 min, free)
 
-**1. Create a free database.** Go to **supabase.com** → **New project** (pick a name + password,
-wait ~2 min).
+The portal is **one big family**: each immediate family logs in and can view **and edit** everyone's
+info (add their kids, dates, photos, etc.). There's one **admin** (you) over the whole family.
 
-**2. Build the tables.** In Supabase: **SQL Editor → New query** → open `schema.sql`, copy all,
-paste, **Run**. Look for "Success."
+1. **Create a free database** at **supabase.com → New project** (save the DB password; wait ~2 min).
+2. **Build the tables** — Supabase **SQL Editor → New query**, paste all of `schema.sql`, **Run**.
+3. **Simplest sign-up** — Authentication → Providers → Email → turn **off** "Confirm email".
+4. **Connect the site** — Supabase **Project Settings → API**. Copy **Project URL** + **anon public** key.
+   In `index.html` set:
+   ```js
+   const SUPABASE_URL      = 'https://YOUR-PROJECT.supabase.co';
+   const SUPABASE_ANON_KEY = 'your-anon-public-key';
+   ```
+   Save and re-upload the folder.
+5. **Make yourself the admin** — open the live site → **Create an account** (your email + password).
+   Then in Supabase **SQL Editor**:
+   ```sql
+   update public.profiles set is_admin = true
+   where id = (select id from auth.users where email = 'you@example.com');
+   ```
+   Refresh — you now have the **Admin** tab.
+6. **Add the families** — **Admin → + Add family** (or **Directory → + Add family**) for each household.
+   Send everyone the link; each family clicks **Create an account**, signs up, and picks their household
+   on first login. From then on everyone can view and edit, and gets reminders.
 
-**3. Turn off email confirmation (easiest).** **Authentication → Providers → Email** → turn off
-**Confirm email**. (Optional — leave on for extra security.)
-
-**4. Connect the site to the database.** Supabase: **Project Settings → API**. Copy the
-**Project URL** and the **anon public** key. Open `index.html` in a text editor and fill in:
-```js
-const SUPABASE_URL      = 'https://YOUR-PROJECT.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-public-key';
-```
-Save. Re-upload the folder to your host (drag it in again to replace).
-
-**5. Make yourself the admin.** Open your live site → **Create an account** → sign up with your
-email + a password. Then in Supabase **SQL Editor**, run (with your email):
-```sql
-update public.profiles set is_admin = true
-where id = (select id from auth.users where email = 'you@example.com');
-```
-Refresh the site — you now have the **Admin** tab.
-
-**6. Add the families.** **Admin → + Add family** for each household. Send each family your site
-link; they click **Create an account**, sign up, and pick their household on first login. From
-then on each family edits only their own info; everyone sees the shared directory and calendar.
-
-Your portal is fully live. Reminders below are optional.
+### Logins (demo mode only)
+If you stay in the no-database demo, family logins are **username + PIN**. The usual convention is
+**username = family name**, **PIN = phone number** (minimum 4 digits). Set these in **Admin → + Add family**.
 
 ---
 
-## Stage 3 — Reminders (optional; browser popups already work)
+## Stage 3 — Reminders: emails, app push, browser (optional)
 
-Browser popups work now — anyone clicks the **🔔** in the top bar and allows notifications.
-For **email** and **app push when the app is closed**, set up the included function:
+How reminders work now:
+- **On the day of an event**, the **immediate family** gets a **celebration email** (birthday,
+  anniversary, milestone) or a yahrzeit note.
+- **Once a week**, **everyone** gets an email listing that week's events (if any).
+- **Browser popups** work with no setup — click the **🔔** in the top bar.
+- Each family chooses its channels in **My Household → Edit contact → Notifications**.
+- **Admins can edit every email's wording** in **Admin → Email templates** (placeholders
+  `{name} {family} {date} {hebrew}`).
 
-**1. Make push keys.** On your computer: `npx web-push generate-vapid-keys`. Copy both keys.
+To switch on the emails + app push (all free):
 
-**2. Add the public key to the site.** In `index.html`: `const VAPID_PUBLIC_KEY = 'your-public-key';`
-Re-upload the folder.
+1. **Push keys** (on your computer): `npx web-push generate-vapid-keys`. Copy both.
+2. In `index.html`: `const VAPID_PUBLIC_KEY = 'your-public-key';` and re-upload.
+3. **Free email sender** — sign up at **resend.com**, create an API key.
+4. **Deploy the function** (free Supabase CLI):
+   ```
+   supabase functions deploy send-reminders --no-verify-jwt
+   supabase secrets set SB_URL=https://YOUR.supabase.co
+   supabase secrets set SB_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+   supabase secrets set RESEND_API_KEY=YOUR_RESEND_KEY
+   supabase secrets set RESEND_FROM="Family Portal <reminders@yourdomain.com>"
+   supabase secrets set VAPID_PUBLIC_KEY=YOUR_PUBLIC_KEY
+   supabase secrets set VAPID_PRIVATE_KEY=YOUR_PRIVATE_KEY
+   supabase secrets set VAPID_SUBJECT="mailto:you@example.com"
+   # optional: which weekday sends the digest (0 = Sunday)
+   supabase secrets set DIGEST_DOW=0
+   ```
+5. **Run it daily** — Supabase **SQL Editor** (enable `pg_cron` + `pg_net` under Database → Extensions):
+   ```sql
+   select cron.schedule('daily-reminders', '0 12 * * *', $$
+     select net.http_post(
+       url:='https://YOUR.supabase.co/functions/v1/send-reminders',
+       headers:='{"Authorization":"Bearer YOUR_SERVICE_ROLE_KEY"}'::jsonb
+     );
+   $$);
+   ```
+   Each morning it sends day-of celebrations, and on the digest day it emails everyone the week ahead
+   (no duplicates).
 
-**3. Free email sender.** Sign up at **resend.com**, create an API key.
+---
 
-**4. Deploy the function** (free Supabase CLI):
-```
-supabase functions deploy send-reminders --no-verify-jwt
-supabase secrets set SB_URL=https://YOUR.supabase.co
-supabase secrets set SB_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
-supabase secrets set RESEND_API_KEY=YOUR_RESEND_KEY
-supabase secrets set RESEND_FROM="Family Portal <reminders@yourdomain.com>"
-supabase secrets set VAPID_PUBLIC_KEY=YOUR_PUBLIC_KEY
-supabase secrets set VAPID_PRIVATE_KEY=YOUR_PRIVATE_KEY
-supabase secrets set VAPID_SUBJECT="mailto:you@example.com"
-```
+## Custom domain(s)
 
-**5. Run it daily.** Supabase **SQL Editor** (enable `pg_cron` + `pg_net` under Database →
-Extensions first):
-```sql
-select cron.schedule('daily-reminders', '0 12 * * *', $$
-  select net.http_post(
-    url:='https://YOUR.supabase.co/functions/v1/send-reminders',
-    headers:='{"Authorization":"Bearer YOUR_SERVICE_ROLE_KEY"}'::jsonb
-  );
-$$);
-```
+- **Cloudflare Pages** → your project → **Custom domains** → add each domain. Free; you can attach
+  many domains to one deployment.
+- **GitHub Pages** supports **one** custom domain per site (Settings → Pages → Custom domain).
 
-Each morning it sends any email/push reminders due, with no duplicates.
+---
+
+## Running SEVERAL main families (no duplication)
+
+You want more than one **main family** (mishpocha) — each with its own admin and members — but you
+**don't** want to copy the whole app for each (that would make updates a nightmare). The design:
+
+- **One deployment** (one repo / one upload) serves them all → you update the code **once**.
+- **Each main family gets its own free Supabase project** → its data, its admin, its members stay
+  separate and private.
+- **You are the master admin** — you own every Supabase project, so you can manage all of them.
+- **Each main family** has its own **admin** (its `is_admin` user) — the "sub-admin".
+- **Every immediate family** inside a main family has its **own user account**.
+
+Set it up:
+
+1. Do Stage 2 once per main family — one Supabase project each, run `schema.sql`, and set that
+   family's admin with the SQL in Stage 2 step 5.
+2. Give each main family its own domain (or subdomain).
+3. In `index.html`, fill the **`SITES`** map near the top:
+   ```js
+   const SITES = {
+     'cohenfamily.com':    { url:'https://AAA.supabase.co', key:'anon-public-key-AAA' },
+     'friedmanfamily.com': { url:'https://BBB.supabase.co', key:'anon-public-key-BBB' },
+   };
+   ```
+4. Point both domains at the **same** deployment. The site automatically uses the right database
+   based on the domain the visitor came in on.
+
+That's it: one codebase, many main families, clean separate data, and you over all of them.
+
+> Want a single login where **you** switch between all main families inside the app (one shared
+> database with a tenant layer) instead of separate projects? That's a bigger build — tell me and
+> I'll add it. For most families the setup above is simpler, free, and keeps each family's data
+> fully separate.
 
 ---
 
 ## Quick checklist
 
-- [ ] Unzip, open `index.html`, try `admin` / `1234`
-- [ ] Upload folder to Cloudflare Pages / Netlify → live link
-- [ ] (Optional) attach each family's custom domain
-- [ ] Supabase project → run `schema.sql`
+- [ ] Try `index.html` locally (`admin` / `1234`)
+- [ ] Upload the whole folder to GitHub Pages / Cloudflare / Netlify
+- [ ] Supabase project → run `schema.sql` → turn off email confirmation
 - [ ] Paste URL + anon key into `index.html`, re-upload
 - [ ] Sign up, make yourself admin, add families
-- [ ] (Optional) deploy `send-reminders` + schedule for email/app-push
+- [ ] (Optional) deploy `send-reminders` + schedule for emails/app-push
+- [ ] (Optional) attach custom domain(s)
+- [ ] (Multiple main families) one Supabase each + fill the `SITES` map
 
-Full details and troubleshooting are in **SETUP.md**.
+Deeper detail and troubleshooting: **SETUP.md**. GitHub specifics: **GITHUB.md**.

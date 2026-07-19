@@ -22,7 +22,7 @@ You have two ways to publish. **Path A (web upload)** needs no tools — just a 
    - Leave everything else default → **Create repository**.
 3. On the new repo page, click **uploading an existing file** (the link in the "Quick setup" box).
 4. **Drag in the contents** of the `family-portal` folder — the individual files
-   (`index.html`, `sw.js`, `manifest.webmanifest`, `icon.svg`, `.nojekyll`, the `.md` files) and
+   (`index.html`, `vendor2.bundle.js`, `sw.js`, `manifest.webmanifest`, `icon.svg`, `.nojekyll`, the `.md` files) and
    the `supabase` folder. (Drag the *files*, not a zip.)
 5. Click **Commit changes**.
 6. Go to **Settings → Pages** (left sidebar).
