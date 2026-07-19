@@ -28,6 +28,7 @@ create table if not exists public.members (
 alter table public.members add column if not exists phone text default '';
 alter table public.members add column if not exists cell  text default '';
 alter table public.members add column if not exists email text default '';
+alter table public.members add column if not exists photo text default '';   -- small profile picture (data URL)
 
 create table if not exists public.events (
   id           uuid primary key default gen_random_uuid(),
@@ -45,6 +46,7 @@ create table if not exists public.events (
 alter table public.events add column if not exists remind jsonb;
 alter table public.events add column if not exists frequency   text not null default 'yearly';
 alter table public.events add column if not exists recur_title text default '';
+alter table public.events add column if not exists photo       text default '';
 
 -- Web-push subscriptions (one row per browser/device a user enables app push on).
 create table if not exists public.push_subscriptions (

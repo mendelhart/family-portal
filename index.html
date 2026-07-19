@@ -129,7 +129,17 @@
   .cell .dn .h{font-size:12px;color:var(--gold)}
   .cell.today .dn .g{color:var(--indigo)}
   .cell .ev-dot{margin-top:3px;font-size:10.5px;padding:1px 5px;border-radius:5px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+  .cell .ev-av{width:12px;height:12px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px;display:inline-block}
   .cell .more{font-size:10px;color:var(--muted);margin-top:2px}
+  .avatar{border-radius:50%;object-fit:cover;vertical-align:middle;border:1px solid var(--line)}
+  .tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:10px;margin-top:8px}
+  .tpl-swatch{border:1px solid var(--line);border-radius:10px;background:#fff;padding:0;overflow:hidden;text-align:left;cursor:pointer}
+  .tpl-swatch:hover{box-shadow:var(--shadow);border-color:var(--indigo)}
+  .tpl-swatch .sw-bar{height:14px;display:block}
+  .tpl-swatch .sw-body{display:block;padding:12px 10px;min-height:46px;border-top:1px solid;position:relative}
+  .tpl-swatch .sw-num{font-weight:700;font-size:16px}
+  .tpl-swatch .sw-dot{position:absolute;right:8px;bottom:8px;width:9px;height:9px;border-radius:50%}
+  .tpl-swatch .sw-name{display:block;padding:6px 9px;font-size:11px;font-weight:600;border-top:1px solid var(--line);color:var(--ink2)}
 
   table{width:100%;border-collapse:collapse}
   th,td{text-align:left;padding:10px 12px;font-size:13.5px;border-top:1px solid var(--line)}
@@ -202,15 +212,33 @@
     .pr-month{font-weight:700;color:#2f3a73;font-size:12.5px;margin:16px 0 4px;break-after:avoid}
     #printArea .heb{font-family:'Frank Ruhl Libre','Times New Roman',serif;direction:rtl;unicode-bidi:isolate}
     .pr-foot{margin-top:14px;padding-top:8px;border-top:1px solid #ccc;font-size:10px;color:#888;text-align:center}
+    #printArea, #printArea *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .cal-print{font-family:var(--pcf);color:#1b2140}
+    .cal-print .pc-band{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid var(--pca);padding-bottom:8px;margin-bottom:8px}
+    .cal-print .pc-title{font-size:26px;font-weight:700;color:var(--pct);line-height:1}
+    .cal-print .pc-hebm{font-size:15px;color:var(--pca);margin-top:3px}
+    .cal-print .pc-sub{font-size:11px;color:#555;text-align:right;line-height:1.5}
+    table.pcal{width:100%;border-collapse:collapse;table-layout:fixed}
+    table.pcal th{background:var(--pch);color:var(--pcfg);padding:6px 4px;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;border:1px solid var(--pcl)}
+    table.pcal td{border:1px solid var(--pcl);height:0.95in;vertical-align:top;padding:3px 5px;overflow:hidden}
+    .cal-print .pc-band{margin-bottom:6px;padding-bottom:6px}
+    .cal-print .pc-title{font-size:22px}
+    table.pcal td.out{background:var(--pco);color:#b7b7b7}
+    .cal-print .pc-dnum{font-weight:700;font-size:15px;color:var(--pcn)}
+    .cal-print .pc-dheb{float:right;font-size:11px;color:var(--pca);font-family:'Frank Ruhl Libre',serif}
+    .cal-print .pc-hol{color:var(--pchl);font-weight:600;font-size:9px;display:block;margin-top:1px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cal-print .pc-ev{font-size:9px;display:block;margin-top:1px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .cal-print .pc-ev .dotc{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:middle}
+    .cal-print .pc-ev img{width:12px;height:12px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:3px}
   }
   @media(max-width:560px){
-    /* calendar becomes tap-to-open: each day shows small colour dots */
-    .cell{min-height:52px;padding:3px 3px}
+    /* phones: show short event names, tap a day for full details */
+    .cell{min-height:66px;padding:3px 3px}
     .cell .dn .g{font-size:12px}
     .cell .dn .h{font-size:9.5px}
-    .cell .ev-dot{display:inline-block;width:7px;height:7px;border-radius:50%;
-      font-size:0;line-height:0;padding:0;margin:3px 3px 0 0;overflow:hidden;vertical-align:middle}
-    .cell .more{display:none}
+    .cell .ev-dot{font-size:8px;padding:1px 3px;margin-top:2px;border-radius:4px;line-height:1.35}
+    .cell .more{display:block;font-size:8px}
+    .cell .ev-av{width:10px;height:10px}
     .cal-head{padding:12px 10px}
     .cal-title{font-size:16px}
   }
@@ -402,9 +430,9 @@ const SupaStore = {
       contact:{ phone:h.phone||'', email:h.email||'', address:h.address||'' }, members:[], events:[] }));
     const byId = Object.fromEntries(fam.map(f=>[f.id,f]));
     (mm||[]).forEach(m=>{ const f=byId[m.household_id]; if(f) f.members.push(
-      { id:m.id, firstName:m.first_name, lastName:m.last_name, hebrewName:m.hebrew_name, relation:m.relation, birthday:m.birthday||'', phone:m.phone||'', cell:m.cell||'', email:m.email||'' }); });
+      { id:m.id, firstName:m.first_name, lastName:m.last_name, hebrewName:m.hebrew_name, relation:m.relation, birthday:m.birthday||'', phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' }); });
     (ee||[]).forEach(e=>{ const f=byId[e.household_id]; if(f) f.events.push(
-      { id:e.id, type:e.type, title:e.title, gregDate:e.greg_date, recurrence:e.recurrence, frequency:e.frequency||'yearly', recurTitle:e.recur_title||'', notes:e.notes||'', remind:e.remind||undefined }); });
+      { id:e.id, type:e.type, title:e.title, gregDate:e.greg_date, recurrence:e.recurrence, frequency:e.frequency||'yearly', recurTitle:e.recur_title||'', notes:e.notes||'', photo:e.photo||'', remind:e.remind||undefined }); });
     DB.families = fam;
     const cn = (st||[]).find(s=>s.key==='communityName');
     DB.meta.communityName = cn ? cn.value : 'Our Family Portal';
@@ -437,14 +465,14 @@ const SupaStore = {
     if(error) throw new Error(error.message); f.id=data.id; return data.id; },
   async deleteHousehold(fid){ const { error } = await supa.from('households').delete().eq('id', fid); if(error) throw new Error(error.message); },
   async saveMember(fid,m){ const row={ household_id:fid, first_name:m.firstName, last_name:m.lastName,
-      hebrew_name:m.hebrewName, relation:m.relation, birthday:m.birthday||null, phone:m.phone||'', cell:m.cell||'', email:m.email||'' };
+      hebrew_name:m.hebrewName, relation:m.relation, birthday:m.birthday||null, phone:m.phone||'', cell:m.cell||'', email:m.email||'', photo:m.photo||'' };
     const exists = await supa.from('members').select('id').eq('id', m.id).maybeSingle();
     let error;
     if(exists.data){ ({ error } = await supa.from('members').update(row).eq('id', m.id)); }
     else { ({ error } = await supa.from('members').insert({ id:m.id, ...row })); }
     if(error) throw new Error(error.message); },
   async deleteMember(fid,mid){ const { error } = await supa.from('members').delete().eq('id', mid); if(error) throw new Error(error.message); },
-  async saveEvent(fid,e){ const row={ household_id:fid, type:e.type, title:e.title, greg_date:e.gregDate, recurrence:e.recurrence, frequency:e.frequency||'yearly', recur_title:e.recurTitle||'', notes:e.notes, remind:e.remind||null };
+  async saveEvent(fid,e){ const row={ household_id:fid, type:e.type, title:e.title, greg_date:e.gregDate, recurrence:e.recurrence, frequency:e.frequency||'yearly', recur_title:e.recurTitle||'', notes:e.notes, photo:e.photo||'', remind:e.remind||null };
     const exists = await supa.from('events').select('id').eq('id', e.id).maybeSingle();
     let error;
     if(exists.data){ ({ error } = await supa.from('events').update(row).eq('id', e.id)); }
@@ -461,6 +489,7 @@ const Store = BACKEND ? SupaStore : DemoStore;
    HEBREW CALENDAR ENGINE
    ============================================================ */
 const HEB_MONTH_HE = {1:'ניסן',2:'אייר',3:'סיון',4:'תמוז',5:'אב',6:'אלול',7:'תשרי',8:'חשון',9:'כסלו',10:'טבת',11:'שבט',12:'אדר',13:'אדר ב׳'};
+const HEB_MONTH_EN = {1:'Nisan',2:'Iyar',3:'Sivan',4:'Tammuz',5:'Av',6:'Elul',7:'Tishrei',8:'Cheshvan',9:'Kislev',10:'Tevet',11:'Shevat',12:'Adar',13:'Adar II'};
 function gregToDate(str){ const [y,m,d]=str.split('-').map(Number); return new Date(y,m-1,d,12,0,0); }
 function dateKey(dt){ return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0'); }
 function hFromGreg(dt){ return new HDate(dt); }
@@ -495,7 +524,7 @@ function familyEvents(fam){
   const evs=[];
   (fam.members||[]).forEach(m=>{ if(m.birthday) evs.push({ id:m.id+'_bd', type:'birthday',
     title:(m.firstName+' '+(m.lastName||'')).trim(), gregDate:m.birthday, recurrence:'hebrew', notes:'',
-    hebrewName:m.hebrewName, familyId:fam.id, householdName:fam.householdName }); });
+    hebrewName:m.hebrewName, photo:m.photo||'', familyId:fam.id, householdName:fam.householdName }); });
   (fam.events||[]).forEach(e=>evs.push({ ...e, familyId:fam.id, householdName:fam.householdName }));
   return evs;
 }
@@ -534,6 +563,19 @@ function dueReminders(withinDays=60){
 }
 const TYPE_LABEL={ yahrzeit:'Yahrzeit', birthday:'Birthday', anniversary:'Anniversary', milestone:'Milestone' };
 const TYPE_BADGE={ yahrzeit:'b-yahrzeit', birthday:'b-birthday', anniversary:'b-anniversary', milestone:'b-milestone' };
+const TYPE_COLOR={ yahrzeit:'#5b6bb5', birthday:'#2f9e73', anniversary:'#c8823a', milestone:'#8a5cc0' };
+const CAL_TEMPLATES=[
+ {id:1,name:'Classic Blue',head:'#2f3a73',fg:'#ffffff',accent:'#2f3a73',line:'#cdd3e6',hol:'#8a7736',out:'#f6f7fb',num:'#1b2140',font:'Georgia, serif',title:'#2f3a73'},
+ {id:2,name:'Parchment Gold',head:'#8a6d1f',fg:'#fff8e7',accent:'#8a6d1f',line:'#e6d8b0',hol:'#a8791f',out:'#faf6ea',num:'#4a3d12',font:'Palatino, Georgia, serif',title:'#6a531a'},
+ {id:3,name:'Elegant Noir',head:'#141414',fg:'#e9c96b',accent:'#141414',line:'#d8d8d8',hol:'#9c7c22',out:'#f5f5f5',num:'#141414',font:'"Bodoni MT", Didot, Georgia, serif',title:'#141414'},
+ {id:4,name:'Modern Slate',head:'#3a4250',fg:'#ffffff',accent:'#3a4250',line:'#dfe3ea',hol:'#6b7280',out:'#f7f8fa',num:'#222222',font:'"Helvetica Neue", Arial, sans-serif',title:'#3a4250'},
+ {id:5,name:'Royal Purple',head:'#4a2b6b',fg:'#ffffff',accent:'#5b3a80',line:'#e2d6ef',hol:'#8a5cc0',out:'#f8f5fc',num:'#2e1a45',font:'Georgia, serif',title:'#4a2b6b'},
+ {id:6,name:'Forest Green',head:'#25543f',fg:'#ffffff',accent:'#2f7a57',line:'#cfe3d8',hol:'#7a6a2f',out:'#f4f9f6',num:'#123524',font:'Georgia, serif',title:'#25543f'},
+ {id:7,name:'Rose Blush',head:'#a24d63',fg:'#ffffff',accent:'#b3596f',line:'#f0d7de',hol:'#b07d2a',out:'#fdf6f7',num:'#4a2530',font:'Baskerville, Georgia, serif',title:'#a24d63'},
+ {id:8,name:'Navy & Cream',head:'#1c2b4a',fg:'#f3ead2',accent:'#1c2b4a',line:'#dfd7c2',hol:'#b08a2e',out:'#faf6ec',num:'#1c2b4a',font:'Georgia, serif',title:'#1c2b4a'},
+ {id:9,name:'Teal Fresh',head:'#0f6e72',fg:'#ffffff',accent:'#0f8a90',line:'#cdeaea',hol:'#7a8a2f',out:'#f2fafa',num:'#08484a',font:'"Segoe UI", Arial, sans-serif',title:'#0f6e72'},
+ {id:10,name:'Mono Bold',head:'#000000',fg:'#ffffff',accent:'#000000',line:'#bbbbbb',hol:'#555555',out:'#f2f2f2',num:'#000000',font:'"Arial Black", Arial, sans-serif',title:'#000000'}
+];
 const ORD=n=>{ const s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); };
 // origin year uses the main title; later years use recurTitle if provided ("Wedding" -> "Anniversary")
 function occLabel(ev, years){ return (years>0 && ev.recurTitle) ? ev.recurTitle : ev.title; }
@@ -663,7 +705,7 @@ function renderDashboard(){
     else if(ev.type==='anniversary') sub=ev.years>0?ORD(ev.years)+' anniversary':'Anniversary';
     else if(ev.type==='birthday') sub=ev.years>0?'turning '+ev.years:'Birthday'; else sub=ev.notes||'Milestone';
     return `<div class="ev"><div class="date-chip"><div class="d">${d.getDate()}</div><div class="mo">${MO[d.getMonth()]}</div></div>
-      <div class="body"><div class="t">${esc(occLabel(ev,ev.years))} <span class="badge ${TYPE_BADGE[ev.type]}">${TYPE_LABEL[ev.type]}</span></div>
+      <div class="body"><div class="t">${ev.photo?`<img src="${ev.photo}" class="avatar" style="width:22px;height:22px;margin-right:5px">`:''}${esc(occLabel(ev,ev.years))} <span class="badge ${TYPE_BADGE[ev.type]}">${TYPE_LABEL[ev.type]}</span></div>
       <div class="heb"><span class="heb">${hl.he}</span> · ${hl.en}</div>
       <div class="meta">${esc(ev.householdName)} family · ${sub}</div></div>
       <div class="countdown">${isSoon?'<span class="badge b-soon">'+soon+'</span>':soon}</div></div>`;
@@ -696,6 +738,7 @@ function renderCalendar(){
       <button class="btn ghost sm" id="calNext" title="Next month">›</button>
       <button class="btn ghost sm" id="calNextY" title="Next year">»</button>
       <button class="btn sec sm" id="calToday">Today</button>
+      <button class="btn gold sm" id="calPrint">🖨 Print</button>
     </div>
     <div style="text-align:center"><div class="cal-title" id="calTitle"></div><div class="cal-title hebm heb" id="calHebTitle"></div></div>
     <div style="min-width:1px"></div></div>
@@ -711,6 +754,7 @@ function renderCalendar(){
   $('#calMonthSel').onchange=e=>{ calMonth=+e.target.value; clampGo(); };
   $('#calYearInp').onchange=e=>{ calYear=+e.target.value||calYear; clampGo(); };
   $('#calToday').onclick=()=>{ const n=new Date(); calYear=n.getFullYear(); calMonth=n.getMonth(); clampGo(); };
+  $('#calPrint').onclick=openPrintCalendarChooser;
   $('#calGrid').addEventListener('click', e=>{ const cell=e.target.closest('.cell'); if(cell && cell.dataset.date) openDay(cell.dataset.date); });
   paintCal();
 }
@@ -731,7 +775,7 @@ function openDay(dateStr){
     const actions = isReal
       ? `<button class="btn sec sm" onclick="window.__dlIcsEvent('${f.id}','${ev.id}')" title="Add to calendar">📅</button>${canEdit?`<button class="btn sec sm" onclick="window.__editEvent('${f.id}','${ev.id}')">Edit</button><button class="btn danger sm" onclick="window.__delEvent('${f.id}','${ev.id}')">✕</button>`:''}`
       : `<span class="note">via My Household</span>`;
-    return `<div class="item"><span class="badge ${TYPE_BADGE[ev.type]}">${TYPE_LABEL[ev.type]}</span><span class="grow"><b>${esc(label)}</b> <span class="note">· ${esc(f.householdName)} family</span></span>${actions}</div>`;
+    return `<div class="item">${ev.photo?`<img src="${ev.photo}" class="avatar" style="width:28px;height:28px">`:''}<span class="badge ${TYPE_BADGE[ev.type]}">${TYPE_LABEL[ev.type]}</span><span class="grow"><b>${esc(label)}</b> <span class="note">· ${esc(f.householdName)} family</span></span>${actions}</div>`;
   }).join('') : '';
   const canAdd=editableFamilies().length>0;
   modal(`<h3>${d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})}</h3>
@@ -770,7 +814,7 @@ function paintCal(){
     const out=dt.getMonth()!==calMonth; const hd=hFromGreg(dt); const k=dateKey(dt);
     const hols=hbuckets[k]||[]; const evs=buckets[k]||[];
     const holShown=hols.slice(0,2).map(h=>`<span class="ev-dot b-holiday" title="${esc(h.label)}">${esc(h.label)}</span>`).join('');
-    const evShown=evs.slice(0,2).map(ev=>`<span class="ev-dot ${TYPE_BADGE[ev.type]}" title="${esc(ev._label||ev.title)} (${esc(ev.householdName)})">${esc(ev._label||ev.title)}</span>`).join('');
+    const evShown=evs.slice(0,2).map(ev=>`<span class="ev-dot ${TYPE_BADGE[ev.type]}" title="${esc(ev._label||ev.title)} (${esc(ev.householdName)})">${ev.photo?`<img src="${ev.photo}" class="ev-av">`:''}${esc(ev._label||ev.title)}</span>`).join('');
     const extra=(hols.length-Math.min(2,hols.length))+(evs.length-Math.min(2,evs.length));
     const more=extra>0?`<div class="more">+${extra} more</div>`:'';
     html+=`<div class="cell ${out?'out':''} ${k===todayKey?'today':''}" data-date="${k}"><div class="dn"><span class="g">${dt.getDate()}</span><span class="h heb">${gematriya(hd.getDate())}</span></div>${holShown}${evShown}${more}</div>`; }
@@ -847,8 +891,59 @@ function printReport(type){
     <div class="pr-foot">${esc(DB.meta.communityName)} · ${title} · dates by the Hebrew (Yiddish) calendar</div>`;
   setTimeout(()=>window.print(), 60);
 }
-window.__printPhonebook=()=>printReport('phonebook');
-window.__printEvents=()=>printReport('events');
+window.__printPhonebook=()=>{ setPrintPage('portrait'); printReport('phonebook'); };
+window.__printEvents=()=>{ setPrintPage('portrait'); printReport('events'); };
+
+function setPrintPage(orient){ let s=document.getElementById('printPage'); if(!s){ s=document.createElement('style'); s.id='printPage'; document.head.appendChild(s); }
+  s.textContent = orient==='landscape' ? '@media print{@page{size:A4 landscape;margin:9mm}}' : '@media print{@page{size:A4 portrait;margin:15mm 14mm}}'; }
+
+/* ---- 10 designed monthly calendar templates ---- */
+function openPrintCalendarChooser(){
+  const y=(typeof calYear!=='undefined'&&calYear)?calYear:new Date().getFullYear();
+  const mo=(typeof calMonth!=='undefined'&&calMonth!=null)?calMonth:new Date().getMonth();
+  const monthsEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const monthOpts=monthsEN.map((m,i)=>`<option value="${i}" ${i===mo?'selected':''}>${m}</option>`).join('');
+  const sw=CAL_TEMPLATES.map(t=>`<button type="button" class="tpl-swatch" onclick="window.__printCal(${t.id})" title="${t.name}">
+    <span class="sw-bar" style="background:${t.head}"></span>
+    <span class="sw-body" style="border-color:${t.line};background:#fff"><span class="sw-num" style="color:${t.num}">15</span> <span class="heb" style="color:${t.accent};font-size:11px">ט״ו</span><span class="sw-dot" style="background:${t.hol}"></span></span>
+    <span class="sw-name">${t.name}</span></button>`).join('');
+  modal(`<h3>Print calendar</h3><p class="sub">Choose a month and a design — it opens your print dialog so you can Save as PDF or print.</p>
+    <div class="form-grid"><div><label class="fl">Month</label><select id="pc_m">${monthOpts}</select></div>
+    <div><label class="fl">Year</label><input id="pc_y" type="number" min="${YEAR_MIN}" max="${YEAR_MAX}" value="${y}"></div></div>
+    <label class="fl" style="margin-top:14px">Pick a template</label>
+    <div class="tpl-grid">${sw}</div>
+    <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Close</button></div>`);
+}
+window.__printCal=(tplId)=>{ const y=+$('#pc_y').value||new Date().getFullYear(); const m=+$('#pc_m').value||0; closeModal(); buildPrintCalendar(y,m,tplId); };
+function buildPrintCalendar(year, month, tplId){
+  const t=CAL_TEMPLATES.find(x=>x.id===tplId)||CAL_TEMPLATES[0];
+  setPrintPage('landscape');
+  const monthsEN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const first=new Date(year,month,1,12); const startDow=first.getDay();
+  const gridStart=new Date(year,month,1-startDow,12); const gridEnd=new Date(gridStart); gridEnd.setDate(gridEnd.getDate()+41);
+  const h1=hFromGreg(first), hLast=hFromGreg(new Date(year,month+1,0,12));
+  let hebm=HEB_MONTH_HE[h1.getMonth()]+' '+gematriya(h1.getFullYear()%1000);
+  if(hLast.getMonth()!==h1.getMonth()) hebm=HEB_MONTH_HE[h1.getMonth()]+' – '+HEB_MONTH_HE[hLast.getMonth()]+' '+gematriya(hLast.getFullYear()%1000);
+  const buckets={}; allEvents().forEach(ev=>occurrencesInRange(ev,gridStart,gridEnd).forEach(o=>{ const k=dateKey(o.date); (buckets[k]=buckets[k]||[]).push({...ev,_label:occLabel(ev,o.years)}); }));
+  const hbuckets=holidayBuckets(gridStart,gridEnd);
+  const DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  let rows='';
+  for(let w=0;w<6;w++){ rows+='<tr>';
+    for(let dow=0;dow<7;dow++){ const dt=new Date(gridStart); dt.setDate(dt.getDate()+(w*7+dow));
+      const out=dt.getMonth()!==month; const hd=hFromGreg(dt); const k=dateKey(dt);
+      const hols=(hbuckets[k]||[]).slice(0,3).map(h=>`<span class="pc-hol">${esc(h.label)}</span>`).join('');
+      const evs=(buckets[k]||[]).slice(0,4).map(ev=>`<span class="pc-ev">${ev.photo?`<img src="${ev.photo}">`:`<span class="dotc" style="background:${TYPE_COLOR[ev.type]}"></span>`}${esc(ev._label||ev.title)}</span>`).join('');
+      rows+=`<td class="${out?'out':''}"><span class="pc-dnum">${dt.getDate()}</span><span class="pc-dheb">${gematriya(hd.getDate())}</span><div style="clear:both"></div>${hols}${evs}</td>`;
+    } rows+='</tr>'; }
+  const vars=`--pch:${t.head};--pcfg:${t.fg};--pca:${t.accent};--pcl:${t.line};--pchl:${t.hol};--pco:${t.out};--pcn:${t.num};--pcf:${t.font};--pct:${t.title}`;
+  $('#printArea').innerHTML=`<div class="cal-print" style="${vars}">
+    <div class="pc-band"><div><div class="pc-title">${monthsEN[month]} ${year}</div><div class="pc-hebm heb">${hebm}</div></div>
+      <div class="pc-sub">${esc(DB.meta.communityName)}<br>Yiddish &amp; English calendar</div></div>
+    <table class="pcal"><thead><tr>${DOW.map(d=>`<th>${d}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+    <div class="pr-foot" style="color:#999">${esc(DB.meta.communityName)} · ${monthsEN[month]} ${year} · dates by the Hebrew (Yiddish) calendar</div>
+  </div>`;
+  setTimeout(()=>window.print(),90);
+}
 
 /* ============================================================
    DIRECTORY / PHONE BOOK
@@ -860,7 +955,7 @@ function renderDirectory(){
     const mem=(f.members||[]).map(m=>{
       const lines=[m.cell?`📱 ${esc(m.cell)}`:'', m.phone?`📞 ${esc(m.phone)}`:'', m.email?`✉️ ${esc(m.email)}`:''].filter(Boolean).join(' &nbsp; ');
       const edit=canEdit?` <button class="btn ghost sm" style="padding:2px 7px" onclick="window.__editMember('${f.id}','${m.id}')" title="Edit">✎</button>`:'';
-      return `<div class="pb-row"><div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start"><div><b>${esc(m.firstName)} ${esc(m.lastName||f.householdName)}</b> ${m.hebrewName?`<span class="heb hn">${esc(m.hebrewName)}</span>`:''} <span class="note">${esc(m.relation||'')}</span>${lines?`<div class="note" style="margin-top:2px">${lines}</div>`:''}</div>${edit}</div></div>`;
+      return `<div class="pb-row"><div style="display:flex;justify-content:space-between;gap:6px;align-items:flex-start"><div style="display:flex;gap:8px;align-items:flex-start">${m.photo?`<img src="${m.photo}" class="avatar" style="width:34px;height:34px">`:''}<div><b>${esc(m.firstName)} ${esc(m.lastName||f.householdName)}</b> ${m.hebrewName?`<span class="heb hn">${esc(m.hebrewName)}</span>`:''} <span class="note">${esc(m.relation||'')}</span>${lines?`<div class="note" style="margin-top:2px">${lines}</div>`:''}</div></div>${edit}</div></div>`;
     }).join('');
     const evc=(f.events||[]).length+(f.members||[]).filter(m=>m.birthday).length;
     return `<div class="card fam-card"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
@@ -939,11 +1034,12 @@ window.__editMember=(fid,mid)=>{ const f=findFam(fid); const m=mid?f.members.fin
     <div class="full"><label class="fl">Birthday (English date)</label><input id="m_bd" type="date" value="${esc(m.birthday||'')}"></div>
     <div><label class="fl">Phone</label><input id="m_ph" type="tel" value="${esc(m.phone||'')}" placeholder="Home / landline"></div>
     <div><label class="fl">Cell</label><input id="m_cell" type="tel" value="${esc(m.cell||'')}" placeholder="Mobile"></div>
-    <div class="full"><label class="fl">Email</label><input id="m_em" type="email" value="${esc(m.email||'')}"></div></div>
+    <div class="full"><label class="fl">Email</label><input id="m_em" type="email" value="${esc(m.email||'')}"></div>
+    ${photoField('m_photo', m.photo)}</div>
     <div class="modal-actions"><button class="btn ghost" onclick="window.__closeModal()">Cancel</button><button class="btn" onclick="window.__saveMember('${fid}','${mid||''}')">Save</button></div>`); };
 window.__saveMember=(fid,mid)=>guarded(async()=>{ const f=findFam(fid); f.members=f.members||[];
   const data={ firstName:$('#m_fn').value.trim(), lastName:$('#m_ln').value.trim(), hebrewName:$('#m_hn').value.trim(), relation:$('#m_rel').value.trim(), birthday:$('#m_bd').value,
-    phone:$('#m_ph').value.trim(), cell:$('#m_cell').value.trim(), email:$('#m_em').value.trim() };
+    phone:$('#m_ph').value.trim(), cell:$('#m_cell').value.trim(), email:$('#m_em').value.trim(), photo:($('#m_photo')||{}).value||'' };
   if(!data.firstName){ toast('First name is required',true); return; }
   let m; if(mid){ m=f.members.find(x=>x.id===mid); Object.assign(m,data); } else { m={ id:uid(), ...data }; f.members.push(m); }
   await Store.saveMember(fid,m); closeModal(); refreshCurrent(); toast('Saved'); });
@@ -968,8 +1064,20 @@ window.__editEvent=(fid,eid,prefill)=>{
       <div><label class="fl">&nbsp;</label><div class="note" style="padding-top:8px">Yearly = recurs each year on the date you pick.</div></div>
       <div class="full"><label class="fl">Name this year</label><input id="e_ti" type="text" value="${esc(e.title||'')}" placeholder="e.g. Wedding of Sarah &amp; Dovid"></div>
       <div class="full"><label class="fl">Name in later years <span class="note">— optional, leave blank to keep the same</span></label><input id="e_ti2" type="text" value="${esc(e.recurTitle||'')}" placeholder="e.g. Anniversary of Sarah &amp; Dovid"></div>
-      <div class="full"><label class="fl">Date it occurred (English)</label><input id="e_dt" type="date" min="${YEAR_MIN}-01-01" max="${YEAR_MAX}-12-31" value="${esc(e.gregDate||'')}"></div>
+      <div class="full"><label class="fl">Date it occurred — enter by:
+        <span style="font-weight:400;margin-left:6px">
+          <label style="margin-right:12px"><input type="radio" name="e_dmode" value="en" checked style="width:auto"> English</label>
+          <label><input type="radio" name="e_dmode" value="he" style="width:auto"> Yiddish / Hebrew</label></span></label>
+        <div id="e_en_wrap"><input id="e_dt" type="date" min="${YEAR_MIN}-01-01" max="${YEAR_MAX}-12-31" value="${esc(e.gregDate||'')}"></div>
+        <div id="e_he_wrap" style="display:none">
+          <div style="display:flex;gap:8px">
+            <select id="eh_m" style="flex:2">${Object.keys(HEB_MONTH_EN).map(k=>`<option value="${k}">${HEB_MONTH_EN[k]} — ${HEB_MONTH_HE[k]}</option>`).join('')}</select>
+            <input id="eh_d" type="number" min="1" max="30" placeholder="Day" style="flex:1">
+            <input id="eh_y" type="number" placeholder="Year e.g. 5786" style="flex:1.5">
+          </div></div>
+      </div>
       <div class="full" id="e_preview" style="background:var(--indigo-soft);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--ink2)">Pick a date to see the Yiddish &amp; English dates.</div>
+      ${photoField('e_photo', e.photo)}
       <div class="full"><label class="fl">Notes</label><input id="e_no" type="text" value="${esc(e.notes||'')}"></div></div>
     <div style="border-top:1px solid var(--line);margin:16px 0 10px;padding-top:14px">
       <label style="display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px"><input type="checkbox" id="r_on" ${r.on?'checked':''} style="width:auto"> Remind before this date</label>
@@ -994,6 +1102,24 @@ window.__editEvent=(fid,eid,prefill)=>{
   ['input','change'].forEach(t=>$('#e_dt').addEventListener(t, window.__evPreview));
   $('#e_rec').addEventListener('change', window.__evPreview);
   $('#e_freq').addEventListener('change', window.__evPreview);
+  document.querySelectorAll('input[name=e_dmode]').forEach(r=>r.addEventListener('change', ev=>{
+    const he=ev.target.value==='he';
+    $('#e_en_wrap').style.display=he?'none':''; $('#e_he_wrap').style.display=he?'':'none';
+    if(he){ const base=$('#e_dt').value? gregToDate($('#e_dt').value) : new Date(); const hd=hFromGreg(base);
+      $('#eh_m').value=hd.getMonth(); $('#eh_d').value=hd.getDate(); $('#eh_y').value=hd.getFullYear(); window.__evHeToGreg(); }
+  }));
+  ['eh_m','eh_d','eh_y'].forEach(id=>{ const el=$('#'+id); if(el){ el.addEventListener('input', window.__evHeToGreg); el.addEventListener('change', window.__evHeToGreg); } });
+  window.__evPreview();
+};
+// Hebrew (Yiddish) date inputs -> set the underlying English date
+window.__evHeToGreg=()=>{
+  const m=+$('#eh_m').value, y=+$('#eh_y').value, dRaw=+$('#eh_d').value;
+  if(!m||!y||!dRaw){ window.__evPreview(); return; }
+  try{ let mm=m; if(mm===13 && !HDate.isLeapYear(y)) mm=12;
+    const dim=HDate.daysInMonth(mm,y); const d=Math.min(dRaw,dim);
+    const g=new HDate(d,mm,y).greg();
+    $('#e_dt').value=g.getFullYear()+'-'+String(g.getMonth()+1).padStart(2,'0')+'-'+String(g.getDate()).padStart(2,'0');
+  }catch(e){}
   window.__evPreview();
 };
 // live "wired together" Yiddish + English preview in the event form
@@ -1019,7 +1145,7 @@ window.__saveEvent=(fid,eid)=>guarded(async()=>{
   const f=findFam(famId); f.events=f.events||[];
   const remind={ on:$('#r_on').checked, daysBefore:+$('#r_days').value||0, notify:$('#r_notify').value,
     emails:$('#r_emails')?$('#r_emails').value.trim():'', channels:{ browser:$('#r_browser').checked, push:$('#r_push').checked, email:$('#r_email').checked } };
-  const data={ type:$('#e_ty').value, recurrence:$('#e_rec').value, frequency:$('#e_freq').value, title:$('#e_ti').value.trim(), recurTitle:$('#e_ti2').value.trim(), gregDate:$('#e_dt').value, notes:$('#e_no').value.trim(), remind };
+  const data={ type:$('#e_ty').value, recurrence:$('#e_rec').value, frequency:$('#e_freq').value, title:$('#e_ti').value.trim(), recurTitle:$('#e_ti2').value.trim(), gregDate:$('#e_dt').value, notes:$('#e_no').value.trim(), photo:($('#e_photo')||{}).value||'', remind };
   if(!data.title||!data.gregDate){ toast('Name and date are required',true); return; }
   let e; if(eid){ e=f.events.find(x=>x.id===eid); Object.assign(e,data); } else { e={ id:uid(), ...data }; f.events.push(e); }
   await Store.saveEvent(famId,e); closeModal(); afterEventChange(); toast('Saved');
@@ -1178,6 +1304,28 @@ const _bell=$('#bellBtn'); if(_bell) _bell.addEventListener('click', enableRemin
    UTIL + BOOT
    ============================================================ */
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---- profile picture helpers (resize to a small thumbnail data URL) ---- */
+function fileToThumb(file, max=160){ return new Promise((res,rej)=>{ const r=new FileReader();
+  r.onload=()=>{ const img=new Image(); img.onload=()=>{ const s=Math.min(1,max/Math.max(img.width,img.height));
+    const w=Math.max(1,Math.round(img.width*s)), h=Math.max(1,Math.round(img.height*s));
+    const c=document.createElement('canvas'); c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h);
+    try{ res(c.toDataURL('image/jpeg',0.82)); }catch(e){ rej(e); } };
+    img.onerror=rej; img.src=r.result; };
+  r.onerror=rej; r.readAsDataURL(file); }); }
+window.__onPhotoPick=async(input,targetId,previewId)=>{ const f=input.files&&input.files[0]; if(!f)return;
+  try{ const url=await fileToThumb(f,160); const t=document.getElementById(targetId); if(t) t.value=url;
+    const pv=document.getElementById(previewId); if(pv){ pv.src=url; pv.style.display='block'; } }
+  catch(e){ toast('Could not load image',true); } };
+window.__clearPhoto=(targetId,previewId)=>{ const t=document.getElementById(targetId); if(t) t.value='';
+  const pv=document.getElementById(previewId); if(pv){ pv.src=''; pv.style.display='none'; } };
+function photoField(id, current){ return `<div class="full"><label class="fl">Profile picture <span class="note">— shown on the calendar</span></label>
+  <div style="display:flex;gap:10px;align-items:center">
+    <img id="${id}_pv" src="${esc(current||'')}" class="avatar" style="width:52px;height:52px;display:${current?'block':'none'}">
+    <input type="hidden" id="${id}" value="${esc(current||'')}">
+    <input type="file" accept="image/*" onchange="window.__onPhotoPick(this,'${id}','${id}_pv')" style="flex:1;padding:8px">
+    <button type="button" class="btn ghost sm" onclick="window.__clearPhoto('${id}','${id}_pv')">Remove</button>
+  </div></div>`; }
 
 (async function boot(){
   try{
